@@ -1,15 +1,15 @@
 package com.lms.assignment;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lms.assignment.submission.AssignmentSubmission;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Data
 @NoArgsConstructor
@@ -25,4 +25,8 @@ public class Assignment {
     @NotNull private String title;
     @NotNull private String description;
     @NotNull private LocalDateTime dueDate;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "assignment")
+    private Collection<AssignmentSubmission> submissions;
 }
