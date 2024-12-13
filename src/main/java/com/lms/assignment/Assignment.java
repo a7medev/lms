@@ -15,6 +15,7 @@ import java.util.Collection;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table
 public class Assignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

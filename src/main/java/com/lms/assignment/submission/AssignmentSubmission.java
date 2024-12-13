@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -17,6 +18,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
+@Table
+@EntityListeners(AuditingEntityListener.class)
 public class AssignmentSubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,8 +32,11 @@ public class AssignmentSubmission {
     // TODO: replace with actual relationship when Course and User entities exist.
     @NotNull private Long studentId;
 
+    @NotNull private String contentType;
     @NotNull private String fileLocation;
-    @CreatedDate private LocalDateTime submittedAt;
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime submittedAt;
     @Null private Integer score;
 
 }
