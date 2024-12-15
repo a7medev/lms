@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 @Service
@@ -24,13 +26,9 @@ public class AuthenticationService {
 
     public AuthenticationResponse register(RegisterRequest request) {
         var password = passwordEncoder.encode(request.getPassword());
-        var dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        Date birthdate = new Date();
-        try {
-            birthdate =  dateFormat.parse(request.getBirthdate());
-        } catch (ParseException e) {
-            System.out.println("Error parsing the date: " + e.getMessage());
-        }
+        var localBirthdate = new Date();
+        var localDateTime = LocalDateTime.ofInstant(localBirthdate.toInstant(), ZoneId.systemDefault());
+        var birthdate = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
         var user = User.builder()
                 .name(request.getName())
@@ -44,9 +42,7 @@ public class AuthenticationService {
 
         var token = jwtService.generateToken(user);
 
-        return AuthenticationResponse.builder()
-                .token(token)
-                .build();
+        return new AuthenticationResponse(token);
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
@@ -60,8 +56,6 @@ public class AuthenticationService {
 
         var token = jwtService.generateToken(user);
 
-        return AuthenticationResponse.builder()
-                .token(token)
-                .build();
+        return new AuthenticationResponse(token);
     }
 }
