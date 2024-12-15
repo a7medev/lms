@@ -9,5 +9,6 @@ import java.util.List;
 public interface AttendanceRepository extends JpaRepository<AttendanceRecord, AttendanceKey> {
 
     List<AttendanceRecord> findByIdCourseIdAndIdLessonId(Long courseId, Long lessonId);
+    List<AttendanceRecord> findByIdCourseId(Long courseId);
     boolean existsById(AttendanceKey id); 
 }

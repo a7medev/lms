@@ -26,4 +26,8 @@ public class AttendanceService {
     public List<AttendanceRecord> getAttendance(Long courseId, Long lessonId) {
         return attendanceRepository.findByIdCourseIdAndIdLessonId(courseId, lessonId);
     }
+
+    public List<AttendanceRecord> getAllAttendanceForCourse(Long courseId) {
+        return attendanceRepository.findByIdCourseId(courseId);
+    }
 }
