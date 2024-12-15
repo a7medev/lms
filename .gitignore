@@ -38,3 +38,6 @@ out/
 
 ### Uploads ###
 uploads/
+
+### env ###
+env.properties
