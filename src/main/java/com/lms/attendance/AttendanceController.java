@@ -4,14 +4,10 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/attendance")
+@RequestMapping("/courses")
 public class AttendanceController {
 
     @Autowired
@@ -20,38 +16,45 @@ public class AttendanceController {
     @Autowired
     private AttendanceService attendanceService;
 
-    //generate otp
-    @PostMapping("/otp")
-    public ResponseEntity<String> generateOtp(@RequestParam Long courseId, @RequestParam Long lessonId) {
-        String otp = otpService.generateOtp(courseId, lessonId);  
-        return ResponseEntity.ok("OTP generated: " + otp);
+    // Generate OTP 
+    @PostMapping("/{courseId}/lessons/{lessonId}/generate-otp")
+    public ResponseEntity<String> generateOtp(
+            @PathVariable Long courseId,
+            @PathVariable Long lessonId) {
+        String otp = otpService.generateOtp(courseId, lessonId);
+        return ResponseEntity.ok(otp);
     }
 
-    //validate otp and mark attendance
-    @PostMapping("/validate")
-    public ResponseEntity<String> validateOtp(
-        @RequestParam Long courseId, 
-        @RequestParam Long lessonId, 
-        @RequestParam String otp, 
-        @RequestParam Long studentId) {
-
-        String storedOtp = otpService.getOtp(courseId, lessonId);  
+    // Attend a specific lesson by providing the OTP
+    @PostMapping("/{courseId}/lessons/{lessonId}/attend")
+    public ResponseEntity<String> attendLesson(
+            @PathVariable Long courseId,
+            @PathVariable Long lessonId,
+            @RequestParam String otp,
+            @RequestParam Long studentId) {
+        String storedOtp = otpService.getOtp(courseId, lessonId);
 
         if (storedOtp != null && storedOtp.equals(otp)) {
-            attendanceService.markAttendance(courseId, lessonId, studentId); 
+            attendanceService.markAttendance(courseId, lessonId, studentId);
             return ResponseEntity.ok("Attendance marked successfully.");
         } else {
             return ResponseEntity.badRequest().body("Invalid OTP.");
         }
     }
 
-    //view attendance
-    @GetMapping("/view")
-    public ResponseEntity<List<AttendanceRecord>> viewAttendance(
-        @RequestParam Long courseId,
-        @RequestParam Long lessonId) {
+    // List student's attendance for course lessons
+    @GetMapping("/{courseId}/attendance")
+    public ResponseEntity<List<AttendanceRecord>> listAttendance(
+            @PathVariable Long courseId,
+            @RequestParam(required = false) Long lessonId) {
+        List<AttendanceRecord> attendanceRecords;
 
-        List<AttendanceRecord> attendanceRecords = attendanceService.getAttendance(courseId, lessonId);
+        if (lessonId != null) {
+            attendanceRecords = attendanceService.getAttendance(courseId, lessonId);
+        } else {
+            attendanceRecords = attendanceService.getAllAttendanceForCourse(courseId);
+        }
+
         return ResponseEntity.ok(attendanceRecords);
     }
 }
