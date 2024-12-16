@@ -22,7 +22,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(RegisterRequest request) {
-        var user = createUser(request, true);
+        var user = createUser(request, false);
 
         userRepository.save(user);
 
