@@ -26,16 +26,15 @@ public class AuthenticationService {
 
     public AuthenticationResponse register(RegisterRequest request) {
         var password = passwordEncoder.encode(request.getPassword());
-        var localBirthdate = new Date();
-        var localDateTime = LocalDateTime.ofInstant(localBirthdate.toInstant(), ZoneId.systemDefault());
-        var birthdate = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        var localBirthdate = request.getBirthdate().atZone(ZoneId.systemDefault()).toInstant();
+        var birthdate = Date.from(localBirthdate);
 
         var user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(password)
                 .phone(request.getPhone())
-                .brithdate(birthdate)
+                .birthdate(birthdate)
                 .role(Role.STUDENT)
                 .build();
         userRepository.save(user);
