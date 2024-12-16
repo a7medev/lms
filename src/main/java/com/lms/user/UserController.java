@@ -3,6 +3,7 @@ package com.lms.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -22,5 +23,11 @@ public class UserController {
     public ResponseEntity<String> editCurrentUserDetails(@RequestBody EditRequest request, Principal currentUser) {
         userService.editUserDetails(request, currentUser);
         return ResponseEntity.ok("User Details Edited Successfully!!");
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping("/admin/edit")
+    public ResponseEntity<String> editUserRole(@RequestBody @Validated RoleChangeRequest request) {
+        return userService.changeRole(request);
     }
 }

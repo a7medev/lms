@@ -1,6 +1,7 @@
 package com.lms.user;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,10 +10,32 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
+    public ResponseEntity<String> changeRole(RoleChangeRequest request) {
+        Optional<User> entity = userRepository.findByEmail(request.getEmail());
+
+        if(entity.isEmpty()) {
+            return ResponseEntity.badRequest().body("User not found!!");
+        }
+
+        var user = entity.get();
+
+        try {
+            Role role = Role.valueOf(request.getRole().toUpperCase());
+            user.setRole(role);
+            userRepository.save(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid Role!!");
+        }
+
+        return ResponseEntity.ok("Changed Role Successfully!!");
+    }
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -60,4 +83,5 @@ public class UserService {
         }
         return passwordEncoder.encode(newPassword);
     }
+
 }
