@@ -32,7 +32,7 @@ public class CourseMaterial {
 
     @NotNull
     private String fileLocation;
-
+    @NotNull String contentType;
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
