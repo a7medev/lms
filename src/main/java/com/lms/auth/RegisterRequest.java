@@ -1,6 +1,6 @@
 package com.lms.auth;
 
-import jakarta.annotation.Nullable;
+import com.lms.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,4 +18,5 @@ public class RegisterRequest {
     private String password;
     private String phone;
     private LocalDateTime birthdate;
+    private Role role = Role.STUDENT;
 }
