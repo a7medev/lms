@@ -1,6 +1,5 @@
 package com.lms.course.post;
 
-import com.lms.course.Course;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,16 +17,16 @@ public class CoursePostService {
         this.coursePostRepository = coursePostRepository;
     }
 
-    public List<CoursePost> getAllPosts() {
-        return coursePostRepository.findAll();
+    public List<CoursePost> getPosts(long courseId) {
+        return coursePostRepository.findAllByCourseCourseId(courseId);
     }
 
-    public CoursePost createPost(CoursePost coursePost, Long courseId) {
+    public CoursePost createPost(CoursePost coursePost) {
         return coursePostRepository.save(coursePost);
     }
 
-    public Optional<CoursePost> getPostById(Long postId) {
-        return coursePostRepository.findByCourseUpdateId(postId);
+    public Optional<CoursePost> getPostById(Long courseId, Long postId) {
+        return coursePostRepository.findByCourseCourseIdAndCourseUpdateId(courseId,postId);
     }
 
     public void deletePost(Long postId) {
