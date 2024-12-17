@@ -10,9 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -25,19 +22,8 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(RegisterRequest request) {
-        var password = passwordEncoder.encode(request.getPassword());
-        var localBirthdate = new Date();
-        var localDateTime = LocalDateTime.ofInstant(localBirthdate.toInstant(), ZoneId.systemDefault());
-        var birthdate = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        var user = createUser(request, false);
 
-        var user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(password)
-                .phone(request.getPhone())
-                .brithdate(birthdate)
-                .role(Role.STUDENT)
-                .build();
         userRepository.save(user);
 
         var token = jwtService.generateToken(user);
@@ -57,5 +43,30 @@ public class AuthenticationService {
         var token = jwtService.generateToken(user);
 
         return new AuthenticationResponse(token);
+    }
+
+    public AuthenticationResponse add(RegisterRequest request) {
+        var user = createUser(request, true);
+        userRepository.save(user);
+
+        var token = jwtService.generateToken(user);
+
+        return new AuthenticationResponse(token);
+    }
+
+    private User createUser(RegisterRequest request, boolean isActive) {
+        var password = passwordEncoder.encode(request.getPassword());
+        var localBirthdate = request.getBirthdate().atZone(ZoneId.systemDefault()).toInstant();
+        var birthdate = Date.from(localBirthdate);
+
+        return User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(password)
+                .phone(request.getPhone())
+                .birthdate(birthdate)
+                .role(Role.STUDENT)
+                .isActive(isActive)
+                .build();
     }
 }
