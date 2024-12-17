@@ -12,6 +12,8 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
 
+import static com.lms.util.AuthUtils.principalToUser;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -39,12 +41,12 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User getUser(Principal currentUser) {
-        return (User) ((UsernamePasswordAuthenticationToken) currentUser).getPrincipal();
+    public User getUser(Principal principal) {
+        return principalToUser(principal);
     }
 
     public void editUserDetails(EditRequest request, Principal currentUser) {
-        var user = (User) ((UsernamePasswordAuthenticationToken) currentUser).getPrincipal();
+        var user = principalToUser(currentUser);
 
         var name = getValue(user.getName(), request.getName());
         var email = getValue(user.getEmail(), request.getEmail());
