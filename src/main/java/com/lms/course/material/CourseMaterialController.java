@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -56,7 +57,15 @@ public class CourseMaterialController {
     }
 
     @DeleteMapping("/{materialId}")
-    public void deletePost(@PathVariable Long materialId) {
+    public void deletePost(@PathVariable Long postId, @PathVariable Long materialId) {
+        CourseMaterial material = courseMaterialService.getMaterialById(postId,materialId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"));
+
+        String filePath = material.getFileLocation();
+        File file = new File(filePath);
+        if (file.exists()) {
+            file.delete();
+        }
         courseMaterialService.deleteMaterial(materialId);
     }
 }
