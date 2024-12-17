@@ -30,8 +30,8 @@ public class CourseMaterialService {
         this.courseMaterialRepository = courseMaterialRepository;
     }
 
-    public List<CourseMaterial> getAllMaterials() {
-        return courseMaterialRepository.findAll();
+    public List<CourseMaterial> getAllMaterials(Long postId) {
+        return courseMaterialRepository.findAllByPostCourseUpdateId(postId);
     }
 
     private Path uploadPath(long courseId, long postId, String extension) {
@@ -86,8 +86,8 @@ public class CourseMaterialService {
         return Pair.of(new FileInputStream(filePath.toFile()), contentType);
     }
 
-    public Optional<CourseMaterial> getMaterialById(Long id) {
-        return courseMaterialRepository.findById(id);
+    public Optional<CourseMaterial> getMaterialById(Long postId, Long materialId) {
+        return courseMaterialRepository.findByPostCourseUpdateIdAndMaterialId(postId,materialId);
     }
 
     public void deleteMaterial(Long materialId) {

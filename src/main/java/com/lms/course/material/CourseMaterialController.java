@@ -28,14 +28,14 @@ public class CourseMaterialController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CourseMaterial>> getAllMaterials(@PathVariable String courseId, @PathVariable String postId) {
-        List<CourseMaterial> materials = courseMaterialService.getAllMaterials();
+    public ResponseEntity<List<CourseMaterial>> getAllMaterials(@PathVariable Long postId) {
+        List<CourseMaterial> materials = courseMaterialService.getAllMaterials(postId);
         return ResponseEntity.ok(materials);
     }
 
     @GetMapping("/{materialId}")
-    public CourseMaterial getMaterialById(@PathVariable Long materialId, @PathVariable String courseId, @PathVariable String postId) {
-        return courseMaterialService.getMaterialById(materialId)
+    public CourseMaterial getMaterialById(@PathVariable Long postId, @PathVariable Long materialId) {
+        return courseMaterialService.getMaterialById(postId,materialId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material for this post not found"));
     }
 
@@ -49,14 +49,14 @@ public class CourseMaterialController {
     }
 
     @GetMapping("/{materialId}/file")
-    public void getMaterialFile(@PathVariable Long courseId, @PathVariable Long postId, @PathVariable Long materialId, HttpServletResponse response) throws IOException {
+    public void getMaterialFile(@PathVariable Long materialId, HttpServletResponse response) throws IOException {
         Pair<InputStream, String> result = courseMaterialService.getMaterialFile(materialId);
         response.setContentType(result.getSecond());
         StreamUtils.copy(result.getFirst(), response.getOutputStream());
     }
 
     @DeleteMapping("/{materialId}")
-    public void deletePost(@PathVariable Long materialId, @PathVariable String courseId, @PathVariable String postId) {
+    public void deletePost(@PathVariable Long materialId) {
         courseMaterialService.deleteMaterial(materialId);
     }
 }
