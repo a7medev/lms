@@ -3,7 +3,7 @@ package com.lms.assignment.submission;
 import com.lms.assignment.Assignment;
 import com.lms.assignment.AssignmentService;
 import com.lms.user.User;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,17 +21,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class AssignmentSubmissionService {
     final AssignmentSubmissionRepository assignmentSubmissionRepository;
     final AssignmentService assignmentService;
 
     public static final String SUBMISSION_LOCATION_FORMAT = "uploads" + File.separator + "assignments" + File.separator + "%d" + File.separator + "submissions" + File.separator;
-
-    @Autowired
-    public AssignmentSubmissionService(AssignmentSubmissionRepository assignmentSubmissionRepository, AssignmentService assignmentService) {
-        this.assignmentSubmissionRepository = assignmentSubmissionRepository;
-        this.assignmentService = assignmentService;
-    }
 
     private Path submissionPath(long assignmentId, String extension) {
         UUID fileId = UUID.randomUUID();

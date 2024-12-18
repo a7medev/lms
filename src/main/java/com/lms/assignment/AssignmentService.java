@@ -1,6 +1,6 @@
 package com.lms.assignment;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -8,13 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class AssignmentService {
     final AssignmentRepository assignmentRepository;
-
-    @Autowired
-    public AssignmentService(AssignmentRepository assignmentRepository) {
-        this.assignmentRepository = assignmentRepository;
-    }
 
     public List<Assignment> getAssignments(Long courseId, boolean upcoming) {
         if (upcoming) {

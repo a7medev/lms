@@ -42,6 +42,6 @@ public class AssignmentSubmission {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime submittedAt;
-    @Null private Integer score;
 
+    private Integer score;
 }
