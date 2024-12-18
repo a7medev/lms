@@ -38,7 +38,7 @@ public class JwtService {
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        int expiration = 1000 * 60 * 60 * 24;
+        int expiration = 1000 * 60 * 60 * 24 * 7;
 
         Date currentDate = new Date(System.currentTimeMillis());
         Date expirationDate = new Date(System.currentTimeMillis() + expiration);
