@@ -2,6 +2,7 @@ package com.lms.assignment.submission;
 
 import com.lms.assignment.Assignment;
 import com.lms.assignment.AssignmentService;
+import com.lms.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
@@ -50,7 +51,7 @@ public class AssignmentSubmissionService {
         return assignmentSubmissionRepository.findById(submissionId);
     }
 
-    public AssignmentSubmission createSubmission(Long assignmentId, Long studentId, MultipartFile file) throws IOException {
+    public AssignmentSubmission createSubmission(Long assignmentId, User student, MultipartFile file) throws IOException {
         Assignment assignment = assignmentService.getAssignment(assignmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
 
@@ -63,7 +64,7 @@ public class AssignmentSubmissionService {
 
         AssignmentSubmission submission = new AssignmentSubmission.AssignmentSubmissionBuilder()
                 .assignment(assignment)
-                .studentId(studentId)
+                .student(student)
                 .contentType(file.getContentType())
                 .fileLocation(submissionPath.getFileName().toString())
                 .build();
@@ -77,6 +78,15 @@ public class AssignmentSubmissionService {
         String filePath = String.format(SUBMISSION_LOCATION_FORMAT, assignmentId) + submission.getFileLocation();
 
         return Pair.of(new FileInputStream(filePath), submission.getContentType());
+    }
+
+    public AssignmentSubmission gradeSubmission(Long submissionId, int grade) {
+        AssignmentSubmission submission = assignmentSubmissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
+
+        submission.setScore(grade);
+
+        return assignmentSubmissionRepository.save(submission);
     }
 
 }

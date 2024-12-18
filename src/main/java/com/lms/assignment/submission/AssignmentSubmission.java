@@ -1,6 +1,8 @@
 package com.lms.assignment.submission;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lms.assignment.Assignment;
+import com.lms.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
@@ -26,11 +28,14 @@ public class AssignmentSubmission {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "assignment_id", nullable = false)
     private Assignment assignment;
 
-    // TODO: replace with actual relationship when Course and User entities exist.
-    @NotNull private Long studentId;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "student_id", nullable = false)
+    private User student;
 
     @NotNull private String contentType;
     @NotNull private String fileLocation;

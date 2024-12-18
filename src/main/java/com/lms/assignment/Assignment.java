@@ -2,6 +2,7 @@ package com.lms.assignment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lms.assignment.submission.AssignmentSubmission;
+import com.lms.course.Course;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -21,8 +22,12 @@ public class Assignment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // TODO: Switch to relation with course once Course entity is added.
-    @NotNull private Long courseId;
+    @NotNull
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
+
     @NotNull private String title;
     @NotNull private String description;
     @NotNull private LocalDateTime dueDate;

@@ -19,9 +19,9 @@ public class AssignmentService {
     public List<Assignment> getAssignments(Long courseId, boolean upcoming) {
         if (upcoming) {
             LocalDateTime now = LocalDateTime.now();
-            return assignmentRepository.findAllByCourseIdAndDueDateAfter(courseId, now);
+            return assignmentRepository.findAllByCourseCourseIdAndDueDateAfter(courseId, now);
         }
-        return assignmentRepository.findAllByCourseId(courseId);
+        return assignmentRepository.findAllByCourseCourseId(courseId);
     }
 
     public Optional<Assignment> getAssignment(Long assignmentId) {

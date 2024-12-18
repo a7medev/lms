@@ -2,6 +2,7 @@ package com.lms.course;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.lms.assignment.Assignment;
 import com.lms.course.post.CoursePost;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,4 +34,8 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<CoursePost> posts;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    private List<Assignment> assignments;
 }
