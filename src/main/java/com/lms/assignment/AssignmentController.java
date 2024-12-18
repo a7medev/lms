@@ -1,30 +1,31 @@
 package com.lms.assignment;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.lms.course.Course;
+import com.lms.course.CourseService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+// TODO: When enrollment is implemented, allow only enrolled students to access course materials.
+// TODO: Allow only instructors for the specific courses to publish course material and view the course details.
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(path = "/courses/{courseId}/assignments")
 public class AssignmentController {
 
     private final AssignmentService assignmentService;
-
-    @Autowired
-    public AssignmentController(AssignmentService assignmentService) {
-        this.assignmentService = assignmentService;
-    }
+    private final CourseService courseService;
 
     @GetMapping
     public List<Assignment> getAssignments(
             @PathVariable Long courseId,
             @RequestParam(defaultValue = "false") Boolean upcoming
     ) {
-        System.out.println(courseId);
-        System.out.println(upcoming);
         return assignmentService.getAssignments(courseId, upcoming);
     }
 
@@ -34,9 +35,14 @@ public class AssignmentController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
     }
 
+    @PreAuthorize("hasAuthority('INSTRUCTOR')")
     @PostMapping
     public Assignment createAssignment(@PathVariable Long courseId, @RequestBody Assignment assignment) {
-        assignment.setCourseId(courseId);
+        Course course = courseService.getCourseById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+
+        assignment.setCourse(course);
+
         return assignmentService.createAssignment(assignment);
     }
 

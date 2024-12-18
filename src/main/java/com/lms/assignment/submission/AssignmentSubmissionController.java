@@ -1,29 +1,29 @@
 package com.lms.assignment.submission;
 
+import com.lms.user.User;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Principal;
 import java.util.List;
 
+import static com.lms.util.AuthUtils.principalToUser;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(path = "/courses/{courseId}/assignments/{assignmentId}/submissions")
 public class AssignmentSubmissionController {
 
     private final AssignmentSubmissionService assignmentSubmissionService;
-
-    @Autowired
-    public AssignmentSubmissionController(AssignmentSubmissionService assignmentSubmissionService) {
-        this.assignmentSubmissionService = assignmentSubmissionService;
-    }
 
     @GetMapping
     public List<AssignmentSubmission> getSubmissions(@PathVariable Long courseId, @PathVariable Long assignmentId) {
@@ -37,9 +37,11 @@ public class AssignmentSubmissionController {
     }
 
     @PostMapping
-    public AssignmentSubmission submitAssignment(@PathVariable Long courseId, @PathVariable Long assignmentId, @RequestParam MultipartFile file) throws IOException {
-        Long studentId = 123L;
-        return assignmentSubmissionService.createSubmission(assignmentId, studentId, file);
+    @PreAuthorize("hasAuthority('STUDENT')")
+    public AssignmentSubmission submitAssignment(@PathVariable Long courseId, @PathVariable Long assignmentId, @RequestParam MultipartFile file, Principal principal) throws IOException {
+        User student = principalToUser(principal);
+
+        return assignmentSubmissionService.createSubmission(assignmentId, student, file);
     }
 
     @GetMapping("{submissionId}/file")
@@ -47,6 +49,12 @@ public class AssignmentSubmissionController {
         Pair<InputStream, String> result = assignmentSubmissionService.getSubmissionFile(assignmentId, submissionId);
         response.setContentType(result.getSecond());
         StreamUtils.copy(result.getFirst(), response.getOutputStream());
+    }
+
+    @PreAuthorize("hasAuthority('INSTRUCTOR')")
+    @PutMapping("{submissionId}")
+    public AssignmentSubmission gradeSubmission(@PathVariable Long courseId, @PathVariable Long assignmentId, @PathVariable Long submissionId, @RequestBody GradeRequest gradeRequest) {
+        return assignmentSubmissionService.gradeSubmission(submissionId, gradeRequest.getGrade());
     }
 
 }

@@ -5,10 +5,12 @@ import com.lms.user.Role;
 import com.lms.user.User;
 import com.lms.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZoneId;
 import java.util.Date;
@@ -23,6 +25,10 @@ public class AuthenticationService {
 
     public AuthenticationResponse register(RegisterRequest request) {
         var user = createUser(request, false);
+
+        if (request.getRole() != Role.STUDENT) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only students can register.");
+        }
 
         userRepository.save(user);
 
@@ -54,7 +60,7 @@ public class AuthenticationService {
         return new AuthenticationResponse(token);
     }
 
-    private User createUser(RegisterRequest request, boolean isActive) {
+    public User createUser(RegisterRequest request, boolean isActive) {
         var password = passwordEncoder.encode(request.getPassword());
         var localBirthdate = request.getBirthdate().atZone(ZoneId.systemDefault()).toInstant();
         var birthdate = Date.from(localBirthdate);
@@ -65,7 +71,7 @@ public class AuthenticationService {
                 .password(password)
                 .phone(request.getPhone())
                 .birthdate(birthdate)
-                .role(Role.STUDENT)
+                .role(request.getRole())
                 .isActive(isActive)
                 .build();
     }

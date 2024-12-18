@@ -2,7 +2,8 @@ package com.lms.assignment.submission;
 
 import com.lms.assignment.Assignment;
 import com.lms.assignment.AssignmentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.lms.user.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,17 +21,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class AssignmentSubmissionService {
     final AssignmentSubmissionRepository assignmentSubmissionRepository;
     final AssignmentService assignmentService;
 
     public static final String SUBMISSION_LOCATION_FORMAT = "uploads" + File.separator + "assignments" + File.separator + "%d" + File.separator + "submissions" + File.separator;
-
-    @Autowired
-    public AssignmentSubmissionService(AssignmentSubmissionRepository assignmentSubmissionRepository, AssignmentService assignmentService) {
-        this.assignmentSubmissionRepository = assignmentSubmissionRepository;
-        this.assignmentService = assignmentService;
-    }
 
     private Path submissionPath(long assignmentId, String extension) {
         UUID fileId = UUID.randomUUID();
@@ -50,7 +46,7 @@ public class AssignmentSubmissionService {
         return assignmentSubmissionRepository.findById(submissionId);
     }
 
-    public AssignmentSubmission createSubmission(Long assignmentId, Long studentId, MultipartFile file) throws IOException {
+    public AssignmentSubmission createSubmission(Long assignmentId, User student, MultipartFile file) throws IOException {
         Assignment assignment = assignmentService.getAssignment(assignmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
 
@@ -63,7 +59,7 @@ public class AssignmentSubmissionService {
 
         AssignmentSubmission submission = new AssignmentSubmission.AssignmentSubmissionBuilder()
                 .assignment(assignment)
-                .studentId(studentId)
+                .student(student)
                 .contentType(file.getContentType())
                 .fileLocation(submissionPath.getFileName().toString())
                 .build();
@@ -77,6 +73,15 @@ public class AssignmentSubmissionService {
         String filePath = String.format(SUBMISSION_LOCATION_FORMAT, assignmentId) + submission.getFileLocation();
 
         return Pair.of(new FileInputStream(filePath), submission.getContentType());
+    }
+
+    public AssignmentSubmission gradeSubmission(Long submissionId, int grade) {
+        AssignmentSubmission submission = assignmentSubmissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
+
+        submission.setScore(grade);
+
+        return assignmentSubmissionRepository.save(submission);
     }
 
 }
