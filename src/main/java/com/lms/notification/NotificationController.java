@@ -19,8 +19,8 @@ public class NotificationController {
     }
 
     @PutMapping("/read")
-    public ResponseEntity<String> readNotifications(@RequestBody List<Integer> notificationId, Principal currentUser) {
-        notificationService.readNotifications(notificationId, currentUser);
+    public ResponseEntity<String> readNotifications(@RequestBody List<Integer> notificationIds, Principal currentUser) {
+        notificationService.readNotifications(notificationIds, currentUser);
         return ResponseEntity.ok().body("Read Notifications Successfully");
     }
 }

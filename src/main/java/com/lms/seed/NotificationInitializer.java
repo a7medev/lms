@@ -6,12 +6,11 @@ import com.lms.user.User;
 import com.lms.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.Month;
-
 @Component
+@Order(2)
 @RequiredArgsConstructor
 public class NotificationInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
@@ -19,18 +18,18 @@ public class NotificationInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        createAndSaveNotification(1, "Hello World", true);
-        createAndSaveNotification(2, "Hello Admin", false);
+        if (notificationRepository.count() == 0) {
+            createAndSaveNotification("Hello World", true);
+            createAndSaveNotification("Hello Admin", false);
+        }
     }
 
-    private void createAndSaveNotification(int id, String message, boolean unread) {
+    private void createAndSaveNotification(String message, boolean isRead) {
         User user = userRepository.findByEmail("admin@lms.com").orElseThrow();
         Notification notification = Notification
                 .builder()
-                .id(id)
                 .message(message)
-                .creationDate(LocalDateTime.of(1973, Month.OCTOBER, 6, 14, 0))
-                .unread(unread)
+                .isRead(isRead)
                 .user(user)
                 .build();
 

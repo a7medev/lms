@@ -32,7 +32,7 @@ public class NotificationService {
                     .builder()
                     .notificationId(notification.getId())
                     .message(notification.getMessage())
-                    .isRead(notification.isUnread())
+                    .isRead(notification.isRead())
                     .userId(user.getId())
                     .build();
             notifications.add(notificationRequest);
@@ -46,7 +46,7 @@ public class NotificationService {
     }
 
     private List<Notification> getAllUnreadNotifications(User currentUser) {
-        return notificationRepository.findAllByUserIdAndUnread(currentUser.getId(), false);
+        return notificationRepository.findAllByUserIdAndIsRead(currentUser.getId(), false);
     }
 
     public void readNotifications(List<Integer> notificationIds, Principal currentUser) {
@@ -56,11 +56,11 @@ public class NotificationService {
             Notification notification = notificationRepository.findById(notificationId).orElse(null);
 
             boolean updateNotification = notification != null
-                    && notification.isUnread()
+                    && !notification.isRead()
                     && user.getId() == notification.getUser().getId();
 
             if (updateNotification) {
-                notification.setUnread(false);
+                notification.setRead(true);
                 notificationRepository.save(notification);
             }
         }

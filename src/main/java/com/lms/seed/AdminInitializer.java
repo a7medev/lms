@@ -7,12 +7,14 @@ import com.lms.user.User;
 import com.lms.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.Month;
 
 @Component
+@Order(1)
 @RequiredArgsConstructor
 public class AdminInitializer implements CommandLineRunner {
 
