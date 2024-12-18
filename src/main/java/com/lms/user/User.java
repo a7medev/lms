@@ -1,5 +1,6 @@
 package com.lms.user;
 
+import com.lms.notification.Notification;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,7 +18,7 @@ import java.util.List;
 @Entity
 public class User implements UserDetails {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
     @Column(unique = true)
@@ -27,6 +28,8 @@ public class User implements UserDetails {
     private Date birthdate;
     @Enumerated(EnumType.STRING)
     private Role role;
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Notification> notification;
     private boolean isActive = false;
 
     @Override
