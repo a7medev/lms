@@ -1,6 +1,8 @@
 package com.lms.notification;
 
+import com.lms.notification.email.EmailNotificationService;
 import com.lms.user.User;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,7 @@ import static com.lms.util.AuthUtils.principalToUser;
 @RequiredArgsConstructor
 public class NotificationService {
     private final NotificationRepository notificationRepository;
+    private final EmailNotificationService emailNotificationService;
 
     public LinkedList<NotificationResponse> getNotifications(boolean unread, Principal currentUser) {
         LinkedList<NotificationResponse> notifications = new LinkedList<>();
@@ -64,5 +67,13 @@ public class NotificationService {
                 notificationRepository.save(notification);
             }
         }
+    }
+
+    public void saveNotification(Notification notification, String subject) throws MessagingException {
+        String text = notification.getMessage();
+        String email = notification.getUser().getEmail();
+
+        notificationRepository.save(notification);
+        emailNotificationService.sendEmail(email, subject, text);
     }
 }
