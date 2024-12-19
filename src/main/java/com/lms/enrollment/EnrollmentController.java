@@ -20,4 +20,13 @@ public class EnrollmentController {
         return ResponseEntity.ok(savedEnrollment);
     }
 
+    @PutMapping("/{enrollmentId}")
+    public ResponseEntity<Enrollment> updateEnrollmentState(
+            @PathVariable Long courseId,
+            @PathVariable Long enrollmentId,
+            @RequestBody EnrollmentUpdateRequest updateRequest) {
+        Enrollment updatedEnrollment = enrollmentService.updateEnrollmentState(courseId,enrollmentId, updateRequest);
+        return ResponseEntity.ok(updatedEnrollment);
+    }
+
 };

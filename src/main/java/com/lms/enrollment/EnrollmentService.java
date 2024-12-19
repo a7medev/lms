@@ -30,14 +30,29 @@ public class EnrollmentService {
         Course course = courseService.getCourseById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
         User user = userService.getUser(currentUser);
-
-        System.out.println("Current User: " + user.getId());
-
         enrollment.setCourse(course);
         enrollment.setUser(user);
         enrollment.setState(State.PENDING);
-        enrollment.setCancellationReason("");
         return enrollmentRepository.save(enrollment);
     }
 
+    public Enrollment updateEnrollmentState(Long courseId, Long enrollmentId, EnrollmentUpdateRequest updateRequest) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found"));
+
+        if (!enrollment.getCourse().getCourseId().equals(courseId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enrollment does not belong to the specified course");
+        }
+
+        System.out.println("Request body: " + updateRequest.toString());
+        if (updateRequest.isAccepted()) {
+            enrollment.setState(State.ACTIVE);
+            enrollment.setCancellationReason(null);
+        } else {
+            enrollment.setState(State.CANCELLED);
+            enrollment.setCancellationReason(updateRequest.getCancellationReason());
+        }
+
+        return enrollmentRepository.save(enrollment);
+    }
 }

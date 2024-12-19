@@ -23,16 +23,6 @@ import java.util.List;
 @Entity
 @Table
 public class Enrollment {
-    // Reference to Courses
-    @ManyToOne
-    @JsonBackReference
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
-
-    @ManyToOne
-    @JsonBackReference
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
-    private User user;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,4 +36,15 @@ public class Enrollment {
     @Column(updatable = false, nullable = false)
     private LocalDateTime CreatedDate;
 
+    // Reference to Courses
+    @ManyToOne
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+
 }
+
