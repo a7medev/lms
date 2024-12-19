@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.List;
 
 @Service
 public class EnrollmentService {
@@ -23,6 +24,10 @@ public class EnrollmentService {
         this.enrollmentRepository = enrollmentRepository;
         this.courseService = courseService;
         this.userService = userService;
+    }
+
+    public List<Enrollment> getAllEnrollments() {
+        return enrollmentRepository.findAll();
     }
 
     public Enrollment CourseEnrollment(Long courseId, Principal currentUser){
@@ -54,5 +59,15 @@ public class EnrollmentService {
         }
 
         return enrollmentRepository.save(enrollment);
+    }
+
+
+    public Enrollment getEnrollment(Long courseId, Long enrollmentId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found"));
+        if (!enrollment.getCourse().getCourseId().equals(courseId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Course ID does not match the enrollment's course");
+        }
+        return enrollment;
     }
 }
