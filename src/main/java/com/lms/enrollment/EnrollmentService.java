@@ -2,13 +2,13 @@ package com.lms.enrollment;
 
 import com.lms.course.Course;
 import com.lms.course.CourseService;
+import com.lms.notification.Notification;
+import com.lms.notification.NotificationService;
 import com.lms.user.User;
-import com.lms.user.UserService;
+import com.lms.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
@@ -21,12 +21,23 @@ import static com.lms.util.AuthUtils.principalToUser;
 public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final CourseService courseService;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public List<Enrollment> getAllEnrollments(Long courseId) {
         return enrollmentRepository.findAllByCourseCourseId(courseId);
     }
 
-    public Enrollment createEnrollment(Long courseId, Principal currentUser){
+    public Enrollment getEnrollment(Long courseId, Long enrollmentId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found"));
+        if (!enrollment.getCourse().getCourseId().equals(courseId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Course ID does not match the enrollment's course");
+        }
+        return enrollment;
+    }
+
+    public Enrollment createEnrollment(Long courseId, Principal currentUser) {
         Enrollment enrollment = new Enrollment();
         Course course = courseService.getCourseById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
@@ -34,6 +45,7 @@ public class EnrollmentService {
         enrollment.setCourse(course);
         enrollment.setUser(user);
         enrollment.setEnrollmentState(EnrollmentState.PENDING);
+        sendEnrollmentNotification(course, enrollment);
         return enrollmentRepository.save(enrollment);
     }
 
@@ -57,13 +69,26 @@ public class EnrollmentService {
         return enrollmentRepository.save(enrollment);
     }
 
-
-    public Enrollment getEnrollment(Long courseId, Long enrollmentId) {
-        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found"));
-        if (!enrollment.getCourse().getCourseId().equals(courseId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Course ID does not match the enrollment's course");
-        }
-        return enrollment;
+    private void sendEnrollmentNotification(Course course, Enrollment savedEnrollment) {
+        Integer instructorId = course.getInstructorId();
+        userRepository.findById(instructorId).ifPresent(instructor -> {
+            try {
+                Notification notification = new Notification();
+                notification.setUser(instructor);
+                notification.setMessage(createNotificationMessage(savedEnrollment));
+                notificationService.saveNotification(notification,
+                        "New Enrollment Pending: " + course.getTitle());
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to send notification", e);
+            }
+        });
     }
+
+    private String createNotificationMessage(Enrollment savedEnrollment) {
+        return "A new enrollment request has been submitted by "
+                + savedEnrollment.getUser().getName()
+                + " for your course: " + savedEnrollment.getCourse().getTitle()
+                + ". The enrollment is currently pending approval.";
+    }
+
 }
