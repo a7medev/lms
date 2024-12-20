@@ -74,8 +74,10 @@ public class EnrollmentService {
         Integer instructorId = course.getInstructorId();
         userRepository.findById(instructorId).ifPresent(instructor -> {
             try {
-                Notification notification;
-                notification = Notification.builder().user(instructor).message(createNotificationMessage(savedEnrollment)).build();
+                Notification notification = Notification.builder()
+                    .user(instructor)
+                    .message(createNotificationMessage(savedEnrollment))
+                    .build();
                 notificationService.saveNotification(notification,
                         "New Enrollment Pending: " + course.getTitle());
             } catch (Exception e) {
