@@ -38,13 +38,14 @@ public class EnrollmentService {
     }
 
     public Enrollment createEnrollment(Long courseId, Principal currentUser) {
-        Enrollment enrollment = new Enrollment();
         Course course = courseService.getCourseById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
         User user = principalToUser(currentUser);
-        enrollment.setCourse(course);
-        enrollment.setUser(user);
-        enrollment.setEnrollmentState(EnrollmentState.PENDING);
+        Enrollment enrollment = Enrollment.builder()
+                .course(course)
+                .user(user)
+                .enrollmentState(EnrollmentState.PENDING)
+                .build();
         sendEnrollmentNotification(course, enrollment);
         return enrollmentRepository.save(enrollment);
     }
@@ -73,9 +74,8 @@ public class EnrollmentService {
         Integer instructorId = course.getInstructorId();
         userRepository.findById(instructorId).ifPresent(instructor -> {
             try {
-                Notification notification = new Notification();
-                notification.setUser(instructor);
-                notification.setMessage(createNotificationMessage(savedEnrollment));
+                Notification notification;
+                notification = Notification.builder().user(instructor).message(createNotificationMessage(savedEnrollment)).build();
                 notificationService.saveNotification(notification,
                         "New Enrollment Pending: " + course.getTitle());
             } catch (Exception e) {
