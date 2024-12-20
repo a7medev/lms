@@ -5,7 +5,6 @@ import com.lms.course.CourseService;
 import com.lms.notification.Notification;
 import com.lms.notification.NotificationService;
 import com.lms.user.User;
-import com.lms.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ import static com.lms.util.AuthUtils.principalToUser;
 public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final CourseService courseService;
-    private final UserRepository userRepository;
     private final NotificationService notificationService;
 
     public List<Enrollment> getAllEnrollments(Long courseId) {
@@ -71,19 +69,14 @@ public class EnrollmentService {
     }
 
     private void sendEnrollmentNotification(Course course, Enrollment savedEnrollment) {
-        Integer instructorId = course.getInstructorId();
-        userRepository.findById(instructorId).ifPresent(instructor -> {
-            try {
-                Notification notification = Notification.builder()
-                    .user(instructor)
-                    .message(createNotificationMessage(savedEnrollment))
-                    .build();
-                notificationService.saveNotification(notification,
-                        "New Enrollment Pending: " + course.getTitle());
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to send notification", e);
-            }
-        });
+        User instructor = course.getInstructor();
+        Notification notification = Notification.builder()
+            .user(instructor)
+            .message(createNotificationMessage(savedEnrollment))
+            .build();
+
+        notificationService.saveNotification(notification,
+                "New Enrollment Pending: " + course.getTitle());
     }
 
     private String createNotificationMessage(Enrollment savedEnrollment) {

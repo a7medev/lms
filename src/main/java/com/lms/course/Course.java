@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.lms.assignment.Assignment;
 import com.lms.course.post.CoursePost;
+import com.lms.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,7 +30,9 @@ public class Course {
     private String description;
 
     @NotNull
-    private Integer instructorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    private User instructor;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
     @JsonManagedReference

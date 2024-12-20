@@ -1,12 +1,17 @@
 package com.lms.course;
 
+import com.lms.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.List;
+
+import static com.lms.util.AuthUtils.principalToUser;
 
 @RestController
 @RequestMapping("/courses")
@@ -23,8 +28,12 @@ public class CourseController {
         return courseService.getAllCourses();
     }
 
+    @PreAuthorize("hasAnyAuthority('INSTRUCTOR', 'ADMIN')")
     @PostMapping
-    public ResponseEntity<Course> createCourse(@RequestBody Course course) {
+    public ResponseEntity<Course> createCourse(@RequestBody Course course, Principal principal) {
+        User user = principalToUser(principal);
+        course.setInstructor(user);
+
         Course createdCourse = courseService.createCourse(course);
         return new ResponseEntity<>(createdCourse, HttpStatus.CREATED);
     }

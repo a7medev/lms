@@ -1,5 +1,7 @@
 package com.lms.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lms.course.Course;
 import com.lms.notification.Notification;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,11 +28,18 @@ public class User implements UserDetails {
     private String phone;
     private String password;
     private Date birthdate;
+    private boolean isActive = false;
+
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notification;
-    private boolean isActive = false;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "instructor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Course> courses;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
