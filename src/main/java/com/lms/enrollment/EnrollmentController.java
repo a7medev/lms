@@ -6,6 +6,7 @@ import com.lms.user.User;
 import com.lms.user.UserRepository;
 import com.lms.user.UserService;
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,25 +15,19 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping(path = "/courses/{courseId}/enrollments")
 public class EnrollmentController {
     private final UserService userService;
     private final EnrollmentService enrollmentService;
     private final NotificationService notificationService;
-//    private final UserRepository userRepository;
-    @Autowired
-    public EnrollmentController(EnrollmentService enrollmentService, NotificationService notificationService, UserService userService, UserRepository userRepository) {
-        this.enrollmentService = enrollmentService;
-        this.notificationService = notificationService;
-        this.userService = userService;
-//        this.userRepository = userRepository;
-    }
+    private final UserRepository userRepository;
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','INSTRUCTOR')")
     @GetMapping
     public List<Enrollment> getAllEnrollments(@PathVariable Long courseId) {
-        return enrollmentService.getAllEnrollments();
+        return enrollmentService.getAllEnrollments(courseId);
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','INSTRUCTOR')")
@@ -66,7 +61,7 @@ public class EnrollmentController {
             @PathVariable Long courseId,
             @PathVariable Long enrollmentId,
             @RequestBody EnrollmentUpdateRequest updateRequest) {
-        Enrollment updatedEnrollment = enrollmentService.updateEnrollmentState(courseId,enrollmentId, updateRequest);
+        Enrollment updatedEnrollment = enrollmentService.updateEnrollmentState(courseId, enrollmentId, updateRequest);
         return ResponseEntity.ok(updatedEnrollment);
     }
 

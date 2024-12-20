@@ -9,7 +9,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -26,15 +25,16 @@ public class Enrollment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long EnrollmentID;
+    private Long enrollmentID;
 
-    private State state;
 
-    private String CancellationReason;
+    private EnrollmentState enrollmentState;
+
+    private String cancellationReason;
 
     @CreatedDate
     @Column(updatable = false, nullable = false)
-    private LocalDateTime CreatedDate;
+    private LocalDateTime createdDate;
 
     // Reference to Courses
     @ManyToOne
@@ -44,7 +44,6 @@ public class Enrollment {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
 
 }
 

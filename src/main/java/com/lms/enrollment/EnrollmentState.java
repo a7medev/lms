@@ -1,6 +1,6 @@
 package com.lms.enrollment;
 
-public enum State {
+public enum EnrollmentState {
     ACTIVE,
     CANCELLED,
     PENDING

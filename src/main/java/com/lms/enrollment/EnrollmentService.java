@@ -4,6 +4,7 @@ import com.lms.course.Course;
 import com.lms.course.CourseService;
 import com.lms.user.User;
 import com.lms.user.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,22 +13,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
-
+@RequiredArgsConstructor
 @Service
 public class EnrollmentService {
-    EnrollmentRepository enrollmentRepository;
-    final CourseService courseService;
+    private final EnrollmentRepository enrollmentRepository;
+    private final CourseService courseService;
     private final UserService userService;
 
-    @Autowired
-    public EnrollmentService(EnrollmentRepository enrollmentRepository, CourseService courseService, UserService userService) {
-        this.enrollmentRepository = enrollmentRepository;
-        this.courseService = courseService;
-        this.userService = userService;
-    }
-
-    public List<Enrollment> getAllEnrollments() {
-        return enrollmentRepository.findAll();
+    public List<Enrollment> getAllEnrollments(Long courseId) {
+        return enrollmentRepository.findAllByCourseCourseId(courseId);
     }
 
     public Enrollment CourseEnrollment(Long courseId, Principal currentUser){
@@ -37,7 +31,7 @@ public class EnrollmentService {
         User user = userService.getUser(currentUser);
         enrollment.setCourse(course);
         enrollment.setUser(user);
-        enrollment.setState(State.PENDING);
+        enrollment.setEnrollmentState(EnrollmentState.PENDING);
         return enrollmentRepository.save(enrollment);
     }
 
@@ -51,10 +45,10 @@ public class EnrollmentService {
 
         System.out.println("Request body: " + updateRequest.toString());
         if (updateRequest.isAccepted()) {
-            enrollment.setState(State.ACTIVE);
+            enrollment.setEnrollmentState(EnrollmentState.ACTIVE);
             enrollment.setCancellationReason(null);
         } else {
-            enrollment.setState(State.CANCELLED);
+            enrollment.setEnrollmentState(EnrollmentState.CANCELLED);
             enrollment.setCancellationReason(updateRequest.getCancellationReason());
         }
 
