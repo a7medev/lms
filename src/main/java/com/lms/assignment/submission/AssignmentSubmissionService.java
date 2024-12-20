@@ -2,8 +2,14 @@ package com.lms.assignment.submission;
 
 import com.lms.assignment.Assignment;
 import com.lms.assignment.AssignmentService;
+import com.lms.course.Course;
+import com.lms.notification.Notification;
+import com.lms.notification.NotificationService;
 import com.lms.user.User;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,8 +29,10 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AssignmentSubmissionService {
-    final AssignmentSubmissionRepository assignmentSubmissionRepository;
-    final AssignmentService assignmentService;
+    private final AssignmentSubmissionRepository assignmentSubmissionRepository;
+    private final AssignmentService assignmentService;
+    private final NotificationService notificationService;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public static final String SUBMISSION_LOCATION_FORMAT = "uploads" + File.separator + "assignments" + File.separator + "%d" + File.separator + "submissions" + File.separator;
 
@@ -64,7 +72,32 @@ public class AssignmentSubmissionService {
                 .fileLocation(submissionPath.getFileName().toString())
                 .build();
 
-        return assignmentSubmissionRepository.save(submission);
+        AssignmentSubmission createdSubmission = assignmentSubmissionRepository.save(submission);
+
+        sendSubmissionNotification(submission);
+
+        return createdSubmission;
+    }
+
+    private void sendSubmissionNotification(AssignmentSubmission submission) {
+        Assignment assignment = submission.getAssignment();
+        Course course = assignment.getCourse();
+        User student = submission.getStudent();
+        User instructor = course.getInstructor();
+
+        String subject = "LMS - New Assignment Submission";
+        String message = String.format("%s submitted assignment \"%s\" for the \"%s\" course.", student.getName(), assignment.getTitle(), course.getTitle());
+        Notification notification = Notification.builder()
+                .message(message)
+                .user(instructor)
+                .build();
+
+        try {
+            notificationService.saveNotification(notification, subject);
+        } catch (MessagingException e) {
+            logger.error("Failed to send notification to course instructor for submission.");
+            logger.error(e.getMessage());
+        }
     }
 
     public Pair<InputStream, String> getSubmissionFile(Long assignmentId, Long submissionId) throws FileNotFoundException {
@@ -81,7 +114,31 @@ public class AssignmentSubmissionService {
 
         submission.setScore(grade);
 
-        return assignmentSubmissionRepository.save(submission);
+        assignmentSubmissionRepository.save(submission);
+
+        sendGradingNotification(submission);
+
+        return submission;
+    }
+
+    private void sendGradingNotification(AssignmentSubmission submission) {
+        User student = submission.getStudent();
+        Assignment assignment = submission.getAssignment();
+        Course course = assignment.getCourse();
+
+        String subject = "LMS - Your Assignment Submission has been Graded";
+        String message = String.format("You scored %d in the assignment \"%s\" for the \"%s\" course.", submission.getScore(), assignment.getTitle(), course.getTitle());
+        Notification notification = Notification.builder()
+                .message(message)
+                .user(student)
+                .build();
+
+        try {
+            notificationService.saveNotification(notification, subject);
+        } catch (MessagingException e) {
+            logger.error("Failed to send notification to student for assignment grading.");
+            logger.error(e.getMessage());
+        }
     }
 
 }

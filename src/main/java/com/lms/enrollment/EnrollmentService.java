@@ -71,19 +71,18 @@ public class EnrollmentService {
     }
 
     private void sendEnrollmentNotification(Course course, Enrollment savedEnrollment) {
-        Integer instructorId = course.getInstructorId();
-        userRepository.findById(instructorId).ifPresent(instructor -> {
-            try {
-                Notification notification = Notification.builder()
-                    .user(instructor)
-                    .message(createNotificationMessage(savedEnrollment))
-                    .build();
-                notificationService.saveNotification(notification,
-                        "New Enrollment Pending: " + course.getTitle());
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to send notification", e);
-            }
-        });
+        User instructor = course.getInstructor();
+        Notification notification = Notification.builder()
+            .user(instructor)
+            .message(createNotificationMessage(savedEnrollment))
+            .build();
+
+        try {
+            notificationService.saveNotification(notification,
+                    "New Enrollment Pending: " + course.getTitle());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send notification", e);
+        }
     }
 
     private String createNotificationMessage(Enrollment savedEnrollment) {
