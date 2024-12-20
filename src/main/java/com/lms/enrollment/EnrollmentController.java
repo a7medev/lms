@@ -37,8 +37,8 @@ public class EnrollmentController {
     }
 
     @PostMapping
-    public ResponseEntity<Enrollment> CourseEnrollment(@PathVariable Long courseId, Principal currentUser) {
-        Enrollment savedEnrollment = enrollmentService.CourseEnrollment(courseId, currentUser);
+    public ResponseEntity<Enrollment> createEnrollment(@PathVariable Long courseId, Principal currentUser) {
+        Enrollment savedEnrollment = enrollmentService.createEnrollment(courseId, currentUser);
 
         // Sending Notification to instructor
 //        if (savedEnrollment != null) {

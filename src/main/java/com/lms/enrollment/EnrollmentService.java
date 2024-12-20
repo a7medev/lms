@@ -13,22 +13,24 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
+
+import static com.lms.util.AuthUtils.principalToUser;
+
 @RequiredArgsConstructor
 @Service
 public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final CourseService courseService;
-    private final UserService userService;
 
     public List<Enrollment> getAllEnrollments(Long courseId) {
         return enrollmentRepository.findAllByCourseCourseId(courseId);
     }
 
-    public Enrollment CourseEnrollment(Long courseId, Principal currentUser){
+    public Enrollment createEnrollment(Long courseId, Principal currentUser){
         Enrollment enrollment = new Enrollment();
         Course course = courseService.getCourseById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
-        User user = userService.getUser(currentUser);
+        User user = principalToUser(currentUser);
         enrollment.setCourse(course);
         enrollment.setUser(user);
         enrollment.setEnrollmentState(EnrollmentState.PENDING);

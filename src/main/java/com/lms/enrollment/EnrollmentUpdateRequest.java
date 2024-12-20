@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 public class EnrollmentUpdateRequest {
     @NotNull
-
     private boolean accepted;
     private String cancellationReason;
 }
