@@ -6,9 +6,7 @@ import com.lms.QuestionBank.Question.Question;
 import com.lms.QuestionBank.Question.ShortAnswerQuestion.ShortAnswerQuestion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
