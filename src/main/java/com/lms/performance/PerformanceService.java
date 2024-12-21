@@ -4,6 +4,7 @@ import com.lms.attendance.AttendanceRecord;
 import com.lms.attendance.AttendanceRepository;
 import com.lms.assignment.submission.AssignmentSubmission;
 import com.lms.assignment.submission.AssignmentSubmissionRepository;
+import com.lms.user.Role;
 import com.lms.user.User;
 import com.lms.user.UserRepository;
 import org.apache.poi.ss.usermodel.*;
@@ -35,14 +36,16 @@ public class PerformanceService {
     }
 
     public byte[] generateGradesExcelReport(Long courseId) {
-        List<User> students = userRepository.findAll(); // Fetch all students
+        List<User> students = userRepository.findAll().stream()
+                .filter(user -> user.getRole() == Role.STUDENT)
+                .toList(); // Fetch only users with student role
         Map<Long, Double> grades = calculateGrades(courseId);
 
         List<List<String>> rows = students.stream()
                 .map(student -> List.of(
                         String.valueOf(student.getId()),
                         student.getName(),
-                        grades.getOrDefault((long) student.getId(), 0.0).toString()
+                        grades.get((long) student.getId()).toString()
                 ))
                 .collect(Collectors.toList());
 
