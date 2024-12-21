@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "question_type")
+@DiscriminatorColumn(name = "question_type", discriminatorType = DiscriminatorType.STRING)
 @RequiredArgsConstructor
 @Table(name="question")
 @Data

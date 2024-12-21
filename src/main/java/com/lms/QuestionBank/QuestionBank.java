@@ -2,6 +2,8 @@ package com.lms.QuestionBank;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lms.QuestionBank.Question.Question;
+import com.lms.Quiz.Quiz;
+import com.lms.course.Course;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +22,13 @@ public class QuestionBank {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long questionBankId;
 
-    @OneToMany(mappedBy = "questionBank", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "questionBank", cascade = CascadeType.ALL, orphanRemoval = true)
     Collection<Question> questions;
+
+    @ManyToOne
+    @JoinColumn(name = "courseId", nullable = false)
+    private Course course;
+
+    @OneToMany(mappedBy = "quizId")
+    private Collection<Quiz> Quizzes;
 }
