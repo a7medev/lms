@@ -9,4 +9,6 @@ public interface CourseMaterialRepository extends JpaRepository<CourseMaterial, 
     List<CourseMaterial> findAllByPostCourseUpdateId(Long postId);
 
     Optional<CourseMaterial> findByPostCourseUpdateIdAndMaterialId(Long postId, Long materialId);
+
+    List<CourseMaterial> findAllByCourseCourseId(Long courseId);
 }

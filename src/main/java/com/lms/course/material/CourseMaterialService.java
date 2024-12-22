@@ -3,6 +3,13 @@ package com.lms.course.material;
 import com.lms.assignment.submission.AssignmentSubmission;
 import com.lms.course.Course;
 import com.lms.course.post.CoursePost;
+import com.lms.enrollment.Enrollment;
+import com.lms.enrollment.EnrollmentRepository;
+import com.lms.notification.Notification;
+import com.lms.notification.NotificationService;
+import com.lms.user.User;
+import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
@@ -16,19 +23,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.lms.util.AuthUtils.principalToUser;
+@RequiredArgsConstructor
 @Service
 public class CourseMaterialService {
     public static final String MATERIAL_UPLOAD_DIR = "uploads" + File.separator + "courses" + File.separator + "%d" + File.separator + "posts" + File.separator + "%d" + File.separator + "material" + File.separator;
     private final CourseMaterialRepository courseMaterialRepository;
-
-    @Autowired
-    public CourseMaterialService(CourseMaterialRepository courseMaterialRepository) {
-        this.courseMaterialRepository = courseMaterialRepository;
-    }
+    private final EnrollmentRepository enrollmentRepository;
+    private final NotificationService notificationService;
 
     public List<CourseMaterial> getAllMaterials(Long postId) {
         return courseMaterialRepository.findAllByPostCourseUpdateId(postId);
@@ -42,7 +49,7 @@ public class CourseMaterialService {
     }
 
 
-    public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file) throws IOException {
+    public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file) throws IOException, MessagingException {
         if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File cannot be empty");
         }
@@ -72,8 +79,10 @@ public class CourseMaterialService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File could not be uploaded");
         }
 
-        return courseMaterialRepository.save(courseMaterial);
-    }
+        CourseMaterial savedMaterial = courseMaterialRepository.save(courseMaterial);
+        sendMaterialUploadNotification(courseId, savedMaterial);
+
+        return savedMaterial;    }
 
     public Pair<InputStream, String> getMaterialFile(Long materialId) throws FileNotFoundException {
         CourseMaterial material = courseMaterialRepository.findById(materialId)
@@ -92,5 +101,31 @@ public class CourseMaterialService {
 
     public void deleteMaterial(Long materialId) {
         courseMaterialRepository.deleteById(materialId);
+    }
+
+    public List<CourseMaterial> getMaterialsForCurrentStudent(Long courseId, Principal currentUser) {
+        User user = principalToUser(currentUser);
+
+        boolean isEnrolled = enrollmentRepository.findAllByUser(user).stream()
+                .anyMatch(enrollment -> enrollment.getCourse().getCourseId().equals(courseId));
+
+        if (!isEnrolled) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not enrolled in this course.");
+        }
+        return courseMaterialRepository.findAllByCourseCourseId(courseId);
+    }
+
+    private void sendMaterialUploadNotification(Long courseId, CourseMaterial savedMaterial) throws MessagingException {
+        List<Enrollment> enrollments = enrollmentRepository.findAllByCourseCourseId(courseId);
+        String notificationMessage = "New material uploaded for Course " + savedMaterial.getPost().getCourse().getTitle();
+
+        for (Enrollment enrollment : enrollments) {
+            User student = enrollment.getUser();
+            Notification notification = Notification.builder()
+                    .user(student)
+                    .message(notificationMessage)
+                    .build();
+            notificationService.saveNotification(notification, "New Material Uploaded");
+        }
     }
 }
