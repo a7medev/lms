@@ -40,7 +40,7 @@ public class QuizSubmissionService {
         return this.quizSubmissionRepository.findAllByQuizQuizId(quizId);
     }
     public Optional<QuizSubmission> checkIfAttemptedBefore(long studentId, long quizId){
-        return this.quizSubmissionRepository.findByQuiz_QuizIdAndStudentId(quizId,studentId);
+        return this.quizSubmissionRepository.findByQuizQuizIdAndStudentId(quizId,studentId);
     }
     public QuizSubmission submitQuiz(long quizId, long courseId, User student, List<QuizAnswerDTO> studAns) {
         Quiz quiz = this.quizService.getQuiz(quizId,courseId)

@@ -10,6 +10,6 @@ import java.util.Optional;
 public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, Long> {
 
     Optional<QuizSubmission> findByQuizSubmissionIdAndQuizQuizId(long quizSubmissionId, long quizId);
-    Optional<QuizSubmission> findByQuiz_QuizIdAndStudentId(long quizId, long studentId);
+    Optional<QuizSubmission> findByQuizQuizIdAndStudentId(long quizId, long studentId);
     List<QuizSubmission> findAllByQuizQuizId(long quizId);
 }

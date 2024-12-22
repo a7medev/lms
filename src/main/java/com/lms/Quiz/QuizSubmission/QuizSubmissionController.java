@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/courses/{courseId}/quizzes/{quizId}/submissions")
+@RequestMapping("/courses/{courseId}/quizzes/{quizId}/submit")
 @AllArgsConstructor
 public class QuizSubmissionController {
     private final QuizSubmissionService quizSubmissionService;
