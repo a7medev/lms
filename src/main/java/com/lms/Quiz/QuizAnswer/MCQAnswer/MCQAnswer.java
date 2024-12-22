@@ -15,5 +15,5 @@ import lombok.*;
 @Builder
 public class MCQAnswer extends QuizAnswer {
     @NotNull
-    int chosenOption;
+    private int chosenOption;
 }
