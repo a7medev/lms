@@ -1,7 +1,6 @@
 package com.lms.Quiz;
 
 
-import com.lms.QuestionBank.Question.Question;
 import com.lms.QuestionBank.QuestionBank;
 import com.lms.QuestionBank.QuestionBankService;
 import lombok.AllArgsConstructor;
@@ -24,7 +23,7 @@ public class QuizController {
         return this.quizService.getAllQuizzes(courseId, upcoming);
     }
     @GetMapping("/{quizId}")
-    public Collection<Question> startQuiz(@PathVariable("courseId") long courseId, @PathVariable("quizId") long quizId){
+    public Collection<QuizQuestionDTO> startQuiz(@PathVariable("courseId") long courseId, @PathVariable("quizId") long quizId){
         return this.quizService.startQuiz(quizId, courseId);
     }
 
@@ -43,8 +42,7 @@ public class QuizController {
                 .startDate(newQuiz.getStartDate())
                 .numberOfQuestions(newQuiz.getNumberOfQuestions())
                 .build();
-        this.quizService.addQuiz(quiz,courseId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(quiz.getQuestions());
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.quizService.addQuiz(quiz,courseId));
     }
 
 }

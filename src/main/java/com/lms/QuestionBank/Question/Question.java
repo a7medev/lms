@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 public class Question {
 
     @Id
-    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long questionId;
 

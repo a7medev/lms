@@ -11,6 +11,8 @@ import com.lms.Quiz.QuizAnswer.QuizAnswerDTO;
 import com.lms.Quiz.QuizAnswer.QuizAnswerService;
 import com.lms.Quiz.QuizAnswer.ShortAnswer.ShortAnswer;
 import com.lms.Quiz.QuizService;
+import com.lms.notification.Notification;
+import com.lms.notification.NotificationService;
 import com.lms.user.User;
 import jakarta.persistence.DiscriminatorValue;
 import lombok.AllArgsConstructor;
@@ -29,7 +31,7 @@ public class QuizSubmissionService {
     private final QuizSubmissionRepository quizSubmissionRepository;
     private final QuizService quizService;
     private final QuizAnswerService quizAnswerService;
-
+    private final NotificationService notificationService;
     public QuizSubmission getQuizSubmission(long submissionId,long quizId){
         return this.quizSubmissionRepository.findByQuizSubmissionIdAndQuizQuizId(submissionId,quizId)
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -71,6 +73,7 @@ public class QuizSubmissionService {
         for(QuizAnswer studentAns: studentAnswers){
             this.quizAnswerService.addSubmittedAnswer(studentAns);
         }
+        sendGradingNotification(quizSubmission);
         return quizSubmission;
     }
     private void gradeQuiz(QuizSubmission studentSubmission, List<QuizAnswer> studentAnswers, List<Question> quizQuestions) {
@@ -83,5 +86,18 @@ public class QuizSubmissionService {
                 score += ((ShortAnswerQuestion) quizQuestions.stream().filter(question -> question.getQuestionId() == answer.getQuestion().getQuestionId()).findFirst().get()).getAnswer().equals(((ShortAnswer) answer).getShortAnswer()) ? 1 : 0;
         }
         studentSubmission.setMarks(score);
+    }
+    private void sendGradingNotification(QuizSubmission submission) {
+        User student = submission.getStudent();
+        Quiz quiz = submission.getQuiz();
+
+        String subject = "LMS - Your Quiz Submission has been Graded";
+        String message = String.format("You scored %d out of %d in the \"%s\" course quiz.", submission.getMarks(),quiz.getNumberOfQuestions(), quiz.getCourse().getTitle());
+        Notification notification = Notification.builder()
+                .message(message)
+                .user(student)
+                .build();
+
+        notificationService.saveNotification(notification, subject);
     }
 }

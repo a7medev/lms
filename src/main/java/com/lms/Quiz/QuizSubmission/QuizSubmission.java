@@ -27,7 +27,6 @@ import java.util.List;
 @Builder
 public class QuizSubmission {
     @Id
-    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long quizSubmissionId;
 

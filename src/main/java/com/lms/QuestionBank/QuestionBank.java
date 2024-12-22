@@ -1,6 +1,5 @@
 package com.lms.QuestionBank;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lms.QuestionBank.Question.Question;
 import com.lms.Quiz.Quiz;
 import com.lms.course.Course;
@@ -18,7 +17,6 @@ import java.util.Collection;
 @Table(name = "question_bank")
 public class QuestionBank {
     @Id
-    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long questionBankId;
 

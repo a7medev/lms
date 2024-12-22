@@ -26,9 +26,10 @@ public class QuizSubmissionController {
     {
         User currentStudent = userService.getUser(principal);
         Optional<QuizSubmission> check =quizSubmissionService.checkIfAttemptedBefore(currentStudent.getId(), quizId);
-        if(check.isPresent())
 
+        if(check.isPresent())
             return new ResponseEntity<>(Pair.of("Quiz has been already attempted",check.get()),HttpStatus.CONFLICT);
+
         return ResponseEntity.ok(this.quizSubmissionService.submitQuiz(quizId,courseId,currentStudent,studentAnswers));
     }
     @GetMapping("/{submissionId}")
