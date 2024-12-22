@@ -15,8 +15,8 @@ import lombok.*;
 @NoArgsConstructor
 public class MCQ extends Question {
     @NotNull
-    String option1,option2,option3,option4;
+    private String option1,option2,option3,option4;
 
     @NotNull
-    int correctOption;
+    private int correctOption;
 }
