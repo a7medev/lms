@@ -28,5 +28,5 @@ public class QuestionBank {
     private Course course;
 
     @OneToMany(mappedBy = "quizId")
-    private Collection<Quiz> Quizzes;
+    private Collection<Quiz> quizzes;
 }
