@@ -9,7 +9,9 @@ import java.util.Optional;
 
 @Repository
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
-    Collection<Quiz> findAllByCourse_CourseId(Long courseId);
-    Collection<Quiz> findAllByCourse_CourseIdAndStartDateAfter(Long courseId, LocalDateTime startDate);
-    Optional<Quiz> findByQuizIdAndCourse_CourseId(Long quizId, Long courseId);
+    Collection<Quiz> findAllByCourseCourseId(Long courseId);
+    Collection<Quiz> findAllByCourseCourseIdAndStartDateAfter(Long courseId, LocalDateTime startDate);
+    Optional<Quiz> findByQuizIdAndCourseCourseId(Long quizId, Long courseId);
+
+    Optional<Quiz> findByQuizId(long quizId);
 }

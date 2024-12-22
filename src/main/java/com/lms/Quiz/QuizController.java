@@ -24,8 +24,8 @@ public class QuizController {
         return this.quizService.getAllQuizzes(courseId, upcoming);
     }
     @GetMapping("/{quizId}")
-    public Collection<Question> startQuiz(@PathVariable long courseId, @PathVariable("quizId") long quizId){
-        return this.quizService.startQuiz(courseId, quizId);
+    public Collection<Question> startQuiz(@PathVariable("courseId") long courseId, @PathVariable("quizId") long quizId){
+        return this.quizService.startQuiz(quizId, courseId);
     }
 
     @PreAuthorize("hasAuthority('INSTRUCTOR')")
@@ -34,7 +34,7 @@ public class QuizController {
         QuestionBank questionBank = this.questionBankService.getQuestionBank(newQuiz.getQuestionBankId(),courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No question bank found"));
 
-        if(newQuiz.getNumberOfQuestions() != questionBank.getQuestions().size())
+        if(newQuiz.getNumberOfQuestions() > questionBank.getQuestions().size())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough questions in the question bank");
 
         Quiz quiz = Quiz.builder()
@@ -44,7 +44,7 @@ public class QuizController {
                 .numberOfQuestions(newQuiz.getNumberOfQuestions())
                 .build();
         this.quizService.addQuiz(quiz,courseId);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(quiz.getQuestions());
     }
 
 }

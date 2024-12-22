@@ -23,20 +23,20 @@ public class QuestionService {
         return questionRepository.findById(id);
     }
     public Optional<Question> getQuestionInQuestionBank(long questionId, long questionBank) {
-        return this.questionRepository.findQuestionByQuestionIdAndQuestionBank_QuestionBankId(questionId, questionBank);
+        return this.questionRepository.findQuestionByQuestionIdAndQuestionBankQuestionBankId(questionId, questionBank);
     }
     public void addQuestion(Question question) {
         questionRepository.save(question);
     }
 
     public Collection<Question> getQuestionsByQuestionBankId(long questionBankId) {
-        return this.questionRepository.findAllByQuestionBank_QuestionBankId(questionBankId);
+        return this.questionRepository.findAllByQuestionBankQuestionBankId(questionBankId);
     }
     public List<Question> getNQuestionsByQuestionBankId(int numberOfQuestions, long questionBankId) {
         return this.questionRepository.getRandomQuestions(numberOfQuestions,questionBankId);
     }
     public void deleteQuestion(long questionId,long questionBankId) {
-        this.questionRepository.deleteByQuestionIdAndQuestionBank_QuestionBankId(questionId,questionBankId);
+        this.questionRepository.deleteByQuestionIdAndQuestionBankQuestionBankId(questionId,questionBankId);
     }
 
     public void updateQuestion(Question question) {

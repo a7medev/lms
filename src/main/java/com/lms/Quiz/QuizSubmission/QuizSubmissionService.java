@@ -5,9 +5,9 @@ import com.lms.QuestionBank.Question.MCQ.MCQ;
 import com.lms.QuestionBank.Question.Question;
 import com.lms.QuestionBank.Question.ShortAnswerQuestion.ShortAnswerQuestion;
 import com.lms.Quiz.Quiz;
-import com.lms.Quiz.QuizAnswer.CollectionOfQuizAnswerDTO;
 import com.lms.Quiz.QuizAnswer.MCQAnswer.MCQAnswer;
 import com.lms.Quiz.QuizAnswer.QuizAnswer;
+import com.lms.Quiz.QuizAnswer.QuizAnswerDTO;
 import com.lms.Quiz.QuizAnswer.QuizAnswerService;
 import com.lms.Quiz.QuizAnswer.ShortAnswer.ShortAnswer;
 import com.lms.Quiz.QuizService;
@@ -28,23 +28,23 @@ public class QuizSubmissionService {
     private final QuizAnswerService quizAnswerService;
 
     public QuizSubmission getQuizSubmission(long submissionId,long quizId){
-        return this.quizSubmissionRepository.findByQuizSubmissionIdAndQuiz_QuizId(submissionId,quizId)
+        return this.quizSubmissionRepository.findByQuizSubmissionIdAndQuizQuizId(submissionId,quizId)
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
     public List<QuizSubmission> getAllQuizSubmissions(long quizId){
-        return this.quizSubmissionRepository.findAllByQuiz_QuizId(quizId);
+        return this.quizSubmissionRepository.findAllByQuizQuizId(quizId);
     }
     public boolean checkIfAttemptedBefore(long studentId,long quizId){
-        return this.quizSubmissionRepository.findByQuiz_QuizIdAndStudent_Id(quizId,studentId).isPresent();
+        return this.quizSubmissionRepository.findByQuiz_QuizIdAndStudentId(quizId,studentId).isPresent();
     }
-    public void submitQuiz(long quizId, long courseId, User student, CollectionOfQuizAnswerDTO studAns) {
+    public void submitQuiz(long quizId, long courseId, User student, List<QuizAnswerDTO> studAns) {
         Quiz quiz = this.quizService.getQuiz(quizId,courseId)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz not found"));
         QuizSubmission quizSubmission =  QuizSubmission.builder()
                 .quiz(quiz)
                 .student(student)
                 .build();
-        List<QuizAnswer> studentAnswers = studAns.getSubmittedAnswers().stream()
+        List<QuizAnswer> studentAnswers = studAns.stream()
                 .map(submittedAnswer -> {
                         QuizAnswer quizAnswer;
                         if(quiz.getQuestions().get(submittedAnswer.getQuestionNumber()).getClass().getAnnotation(DiscriminatorValue.class).value().equals("mcq"))

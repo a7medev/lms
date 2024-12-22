@@ -13,9 +13,9 @@ import java.util.Optional;
 @Repository
 public interface QuestionRepository extends JpaRepository<Question,Long>{
 
-    Collection<Question> findAllByQuestionBank_QuestionBankId(long questionBankQuestionBankId);
-    @Query(value = "SELECT * FROM question ORDER BY RAND() LIMIT :limit WHERE question_bank_id = :questionBankId ;", nativeQuery = true)
+    Collection<Question> findAllByQuestionBankQuestionBankId(long questionBankQuestionBankId);
+    @Query(value = "SELECT * FROM question WHERE question_bank_id = :questionBankId ORDER BY RAND() LIMIT :limit ;", nativeQuery = true)
     List<Question> getRandomQuestions(@Param("limit") int limit, @Param("questionBankId")long questionBankId);
-    void deleteByQuestionIdAndQuestionBank_QuestionBankId(long questionId, long questionBankId);
-    Optional<Question> findQuestionByQuestionIdAndQuestionBank_QuestionBankId(long questionId, long questionBankQuestionBankId);
+    void deleteByQuestionIdAndQuestionBankQuestionBankId(long questionId, long questionBankId);
+    Optional<Question> findQuestionByQuestionIdAndQuestionBankQuestionBankId(long questionId, long questionBankQuestionBankId);
 }

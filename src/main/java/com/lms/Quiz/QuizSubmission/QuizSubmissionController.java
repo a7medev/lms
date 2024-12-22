@@ -1,6 +1,6 @@
 package com.lms.Quiz.QuizSubmission;
 
-import com.lms.Quiz.QuizAnswer.CollectionOfQuizAnswerDTO;
+import com.lms.Quiz.QuizAnswer.QuizAnswerDTO;
 import com.lms.user.User;
 import com.lms.user.UserService;
 import lombok.AllArgsConstructor;
@@ -20,7 +20,7 @@ public class QuizSubmissionController {
     private final UserService userService;
     @PostMapping("")
     @PreAuthorize("hasAuthority('STUDENT')")
-    public ResponseEntity<?> submitAnswers(@RequestBody CollectionOfQuizAnswerDTO studentAnswers, @PathVariable long quizId, @PathVariable long courseId, Principal principal)
+    public ResponseEntity<?> submitAnswers(@RequestBody List<QuizAnswerDTO> studentAnswers, @PathVariable long quizId, @PathVariable long courseId, Principal principal)
     {
         User currentStudent = userService.getUser(principal);
         if(quizSubmissionService.checkIfAttemptedBefore(currentStudent.getId(), quizId))

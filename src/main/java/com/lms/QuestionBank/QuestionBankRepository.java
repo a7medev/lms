@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface QuestionBankRepository extends JpaRepository<QuestionBank, Long> {
-    Optional<QuestionBank> findByQuestionBankIdAndCourse_CourseId(long questionBankId, long courseId);
+    Optional<QuestionBank> findByQuestionBankIdAndCourseCourseId(long questionBankId, long courseId);
 }

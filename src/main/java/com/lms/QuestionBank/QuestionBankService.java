@@ -28,7 +28,7 @@ public class QuestionBankService {
     }
     public Optional<QuestionBank> getQuestionBank(long questionBankId,long  courseId)
     {
-        return this.questionBankRepository.findByQuestionBankIdAndCourse_CourseId(questionBankId,courseId);
+        return this.questionBankRepository.findByQuestionBankIdAndCourseCourseId(questionBankId,courseId);
     }
     public Optional<Question> getQuestion(long questionId, long questionBankId){
         return this.questionService.getQuestionInQuestionBank(questionId,questionBankId);
