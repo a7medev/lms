@@ -20,7 +20,7 @@ import java.util.Optional;
 public class QuizSubmissionController {
     private final QuizSubmissionService quizSubmissionService;
     private final UserService userService;
-    @PostMapping("")
+    @PostMapping
     @PreAuthorize("hasAuthority('STUDENT')")
     public ResponseEntity<?> submitAnswers(@RequestBody List<QuizAnswerDTO> studentAnswers, @PathVariable long quizId, @PathVariable long courseId, Principal principal)
     {
