@@ -38,7 +38,7 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(this.quizSubmissionService.getQuizSubmission(submissionId,quizId));
     }
     @PreAuthorize("hasAuthority('INSTRUCTOR')")
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<List<QuizSubmission>> getAllSubmissionsOfAQuiz(@PathVariable long quizId)
     {
         return ResponseEntity.ok(this.quizSubmissionService.getAllQuizSubmissions(quizId));
