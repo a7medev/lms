@@ -38,7 +38,7 @@ public class QuizSubmission {
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "studentId",nullable = false)
-    User student;
+    private User student;
 
     @CreatedDate
     @NotNull
