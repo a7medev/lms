@@ -30,7 +30,7 @@ public class QuizController {
 
     @PreAuthorize("hasAuthority('INSTRUCTOR')")
     @PostMapping("")
-    public ResponseEntity<?> createQuiz(@PathVariable("courseId") long courseId, @RequestBody RequestBodyQuiz newQuiz){
+    public ResponseEntity<?> createQuiz(@PathVariable("courseId") long courseId, @RequestBody QuizDTO newQuiz){
         QuestionBank questionBank = this.questionBankService.getQuestionBank(newQuiz.getQuestionBankId(),courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No question bank found"));
 

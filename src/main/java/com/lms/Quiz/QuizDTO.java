@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
-public class RequestBodyQuiz {
+public class QuizDTO {
     private int numberOfQuestions;
     private long questionBankId;
     private LocalDateTime startDate;
