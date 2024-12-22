@@ -41,7 +41,7 @@ public class QuestionBankController {
     }
 
     @PreAuthorize("hasAuthority('INSTRUCTOR')")
-    @PostMapping("")
+    @PostMapping
     public ResponseEntity<?> addQuestionBank(@RequestBody QuestionBank questionBank,@PathVariable long courseId)
     {
         this.questionBankService.newQuestionBank(questionBank,courseId);
