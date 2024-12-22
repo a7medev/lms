@@ -17,7 +17,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -34,20 +37,21 @@ public class QuizSubmissionService {
     public List<QuizSubmission> getAllQuizSubmissions(long quizId){
         return this.quizSubmissionRepository.findAllByQuizQuizId(quizId);
     }
-    public boolean checkIfAttemptedBefore(long studentId,long quizId){
-        return this.quizSubmissionRepository.findByQuiz_QuizIdAndStudentId(quizId,studentId).isPresent();
+    public Optional<QuizSubmission> checkIfAttemptedBefore(long studentId, long quizId){
+        return this.quizSubmissionRepository.findByQuiz_QuizIdAndStudentId(quizId,studentId);
     }
-    public void submitQuiz(long quizId, long courseId, User student, List<QuizAnswerDTO> studAns) {
+    public QuizSubmission submitQuiz(long quizId, long courseId, User student, List<QuizAnswerDTO> studAns) {
         Quiz quiz = this.quizService.getQuiz(quizId,courseId)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz not found"));
         QuizSubmission quizSubmission =  QuizSubmission.builder()
                 .quiz(quiz)
                 .student(student)
+                .createdAt(LocalDateTime.now())
                 .build();
         List<QuizAnswer> studentAnswers = studAns.stream()
                 .map(submittedAnswer -> {
                         QuizAnswer quizAnswer;
-                        if(quiz.getQuestions().get(submittedAnswer.getQuestionNumber()).getClass().getAnnotation(DiscriminatorValue.class).value().equals("mcq"))
+                        if(quiz.getQuestions().get(submittedAnswer.getQuestionNumber() - 1).getClass().getAnnotation(DiscriminatorValue.class).value().equals("mcq"))
                             quizAnswer = MCQAnswer.builder()
                                     .chosenOption(submittedAnswer.getChosenOption())
                                     .build();
@@ -55,14 +59,19 @@ public class QuizSubmissionService {
                             quizAnswer = ShortAnswer.builder()
                                     .shortAnswer(submittedAnswer.getAnswer())
                                     .build();
-                        quizAnswer.setQuizSubmission(quizSubmission);
-                        quizAnswer.setQuestion(quiz.getQuestions().get(submittedAnswer.getQuestionNumber()));
-                        quizAnswerService.addSubmittedAnswer(quizAnswer);
+                        quizAnswer.setQuestion(quiz.getQuestions().get(submittedAnswer.getQuestionNumber() - 1));
                         return quizAnswer;
                 }).toList();
         quizSubmission.setStudentAnswers(studentAnswers);
-        this.quizSubmissionRepository.save(quizSubmission);
+        for(QuizAnswer studentAns: studentAnswers){
+            studentAns.setQuizSubmission(quizSubmission);
+        }
         gradeQuiz(quizSubmission,studentAnswers,quiz.getQuestions());
+        this.quizSubmissionRepository.save(quizSubmission);
+        for(QuizAnswer studentAns: studentAnswers){
+            this.quizAnswerService.addSubmittedAnswer(studentAns);
+        }
+        return quizSubmission;
     }
     private void gradeQuiz(QuizSubmission studentSubmission, List<QuizAnswer> studentAnswers, List<Question> quizQuestions) {
         int score = 0;

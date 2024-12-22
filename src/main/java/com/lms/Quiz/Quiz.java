@@ -36,8 +36,21 @@ public class Quiz {
     @JoinColumn(name = "questionBankId",nullable = false)
     private QuestionBank questionBank;
 
+
+    /*while this sort of defies the ERD diagram we agreed upon,
+      I wasnt able to come up with any solution to store the randomly queried questions for a given quiz
+      which I will need in order to grade student's submission, because I have no instance of the questions that was queried from the database
+      I was left no choice but to query it again which will then result in different questions compared to the ones shown
+      another solution is for the same quiz each student will have different model i.e. each student trying to attempt the quiz will trigger
+      a query to the database resulting in new questions tho, that ensures there will be no cheating (lol), this will be costly in terms of performance due to multiple
+      database hits, and we didnt really talk about that during the documentation in regard to different model per student.
+     */
     @JsonIgnore
-    @Transient
+    @ManyToMany
+    @JoinTable(
+            name = "quiz_question",
+            joinColumns = @JoinColumn(name = "quizId"),
+            inverseJoinColumns = @JoinColumn(name = "questionId"))
     private List<Question> questions;
 
     @JsonIgnore

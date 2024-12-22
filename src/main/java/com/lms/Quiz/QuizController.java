@@ -35,7 +35,7 @@ public class QuizController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No question bank found"));
 
         if(newQuiz.getNumberOfQuestions() > questionBank.getQuestions().size())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough questions in the question bank");
+            return new ResponseEntity<>("Not enough questions in the question bank", HttpStatus.BAD_REQUEST);
 
         Quiz quiz = Quiz.builder()
                 .questionBank(questionBank)

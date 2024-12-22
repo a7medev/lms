@@ -1,6 +1,7 @@
 package com.lms.Quiz.QuizAnswer;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lms.QuestionBank.Question.Question;
 import com.lms.Quiz.QuizSubmission.QuizSubmission;
 import jakarta.persistence.*;
@@ -22,6 +23,7 @@ public abstract class QuizAnswer {
     private Question question;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "quizSubmissionId",nullable = false)
     private QuizSubmission quizSubmission;
 }

@@ -37,6 +37,7 @@ public class QuizSubmission {
 
     @CreatedBy
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "studentId",nullable = false)
     User student;
 
@@ -44,7 +45,6 @@ public class QuizSubmission {
     @NotNull
     private LocalDateTime createdAt;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "quizSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuizAnswer> studentAnswers;
 
