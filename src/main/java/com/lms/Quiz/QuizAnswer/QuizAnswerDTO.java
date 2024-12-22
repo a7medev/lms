@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class QuizAnswerDTO {
-    int questionNumber;
-    int chosenOption;
-    String answer;
+    private int questionNumber;
+    private int chosenOption;
+    private String answer;
 }
