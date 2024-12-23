@@ -3,8 +3,10 @@ package com.lms.assignment.submission;
 import com.lms.assignment.Assignment;
 import com.lms.assignment.AssignmentService;
 import com.lms.course.Course;
+import com.lms.course.CourseRepository;
 import com.lms.notification.Notification;
 import com.lms.notification.NotificationService;
+import com.lms.user.Role;
 import com.lms.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
@@ -20,7 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,6 +32,7 @@ public class AssignmentSubmissionService {
     private final NotificationService notificationService;
 
     public static final String SUBMISSION_LOCATION_FORMAT = "uploads" + File.separator + "assignments" + File.separator + "%d" + File.separator + "submissions" + File.separator;
+    private final CourseRepository courseRepository;
 
     private Path submissionPath(long assignmentId, String extension) {
         UUID fileId = UUID.randomUUID();
@@ -42,17 +44,38 @@ public class AssignmentSubmissionService {
         return parentPath.resolve(fileId + "." + extension);
     }
 
-    public List<AssignmentSubmission> getSubmissions(Long assignmentId) {
+    public List<AssignmentSubmission> getSubmissions(Long courseId, Long assignmentId, User user) {
+        Course course = courseRepository.findByCourseId(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+
+        if (user.getRole() != Role.ADMIN && course.getInstructor().getId() != user.getId()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
         return assignmentSubmissionRepository.findAllByAssignmentId(assignmentId);
     }
 
-    public Optional<AssignmentSubmission> getSubmission(Long submissionId) {
-        return assignmentSubmissionRepository.findById(submissionId);
+    public AssignmentSubmission getSubmission(Long submissionId, User user) {
+        AssignmentSubmission submission = assignmentSubmissionRepository.findById(submissionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
+
+        Course course = submission.getAssignment().getCourse();
+
+        if (user.getRole() != Role.ADMIN && course.getInstructor().getId() != user.getId()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        return submission;
     }
 
     public AssignmentSubmission createSubmission(Long assignmentId, User student, MultipartFile file) throws IOException {
-        Assignment assignment = assignmentService.getAssignment(assignmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignment not found"));
+        Assignment assignment = assignmentService.getAssignment(assignmentId, student);
+
+        boolean hasSubmittedBefore = assignmentSubmissionRepository.existsByAssignmentIdAndStudentId(assignmentId, student.getId());
+
+        if (hasSubmittedBefore) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Assignment already exists");
+        }
 
         String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
         Path submissionPath = submissionPath(assignment.getId(), extension);
@@ -91,17 +114,32 @@ public class AssignmentSubmissionService {
         notificationService.saveNotification(notification, subject);
     }
 
-    public Pair<InputStream, String> getSubmissionFile(Long assignmentId, Long submissionId) throws FileNotFoundException {
+    public Pair<InputStream, String> getSubmissionFile(Long assignmentId, Long submissionId, User user) throws FileNotFoundException {
         AssignmentSubmission submission = assignmentSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
+
+        boolean hasAccess = switch (user.getRole()) {
+            case STUDENT -> submission.getStudent().getId() == user.getId();
+            case INSTRUCTOR -> submission.getAssignment().getCourse().getInstructor().getId() == user.getId();
+            case ADMIN -> true;
+        };
+
+        if (!hasAccess) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
         String filePath = String.format(SUBMISSION_LOCATION_FORMAT, assignmentId) + submission.getFileLocation();
 
         return Pair.of(new FileInputStream(filePath), submission.getContentType());
     }
 
-    public AssignmentSubmission gradeSubmission(Long submissionId, int grade) {
+    public AssignmentSubmission gradeSubmission(Long submissionId, int grade, User user) {
         AssignmentSubmission submission = assignmentSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
+
+        if (submission.getAssignment().getCourse().getInstructor().getId() != user.getId()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
 
         submission.setScore(grade);
 

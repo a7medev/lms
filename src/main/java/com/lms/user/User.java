@@ -28,7 +28,7 @@ public class User implements UserDetails {
     private String phone;
     private String password;
     private Date birthdate;
-    private boolean isActive = false;
+    private Boolean isActive = false;
 
     @Enumerated(EnumType.STRING)
     private Role role;
