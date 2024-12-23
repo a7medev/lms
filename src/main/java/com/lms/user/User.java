@@ -26,8 +26,10 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String email;
     private String phone;
+    @JsonIgnore
     private String password;
     private Date birthdate;
+    @JsonIgnore
     private Boolean isActive = false;
 
     @Enumerated(EnumType.STRING)
@@ -41,16 +43,19 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "instructor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Course> courses;
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
+    @JsonIgnore
     @Override
     public String getUsername() {
         return email;
     }
 
+    @JsonIgnore
     @Override
     public boolean isEnabled() {
         return isActive;
