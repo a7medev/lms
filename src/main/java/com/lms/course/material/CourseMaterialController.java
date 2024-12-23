@@ -10,6 +10,8 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
 import java.util.List;
+@EnableMethodSecurity
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(path = "courses/{courseId}/posts/{postId}/material")
@@ -39,19 +42,6 @@ public class CourseMaterialController {
     public CourseMaterial getMaterialById(@PathVariable Long courseId, @PathVariable Long postId, @PathVariable Long materialId, Principal principal) {
         return courseMaterialService.getMaterialByIdForUser(courseId, postId, materialId, principal);
     }
-//
-//
-//    @GetMapping
-//    public ResponseEntity<List<CourseMaterial>> getAllMaterials(@PathVariable Long postId) {
-//        List<CourseMaterial> materials = courseMaterialService.getAllMaterials(postId);
-//        return ResponseEntity.ok(materials);
-//    }
-//
-//    @GetMapping("/{materialId}")
-//    public CourseMaterial getMaterialById(@PathVariable Long postId, @PathVariable Long materialId) {
-//        return courseMaterialService.getMaterialById(postId,materialId)
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material for this post not found"));
-//    }
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'INSTRUCTOR')")
     @PostMapping
@@ -66,8 +56,8 @@ public class CourseMaterialController {
 
     @PreAuthorize("hasAnyAuthority('STUDENT', 'INSTRUCTOR', 'ADMIN')")
     @GetMapping("/{materialId}/file")
-    public void getMaterialFile(@PathVariable Long materialId, HttpServletResponse response) throws IOException {
-        Pair<InputStream, String> result = courseMaterialService.getMaterialFile(materialId);
+    public void getMaterialFile(@PathVariable Long courseId, @PathVariable Long materialId, HttpServletResponse response,Principal principal) throws IOException {
+        Pair<InputStream, String> result = courseMaterialService.getMaterialFile(courseId,materialId,principal);
         response.setContentType(result.getSecond());
         StreamUtils.copy(result.getFirst(), response.getOutputStream());
     }

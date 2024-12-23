@@ -3,10 +3,8 @@ package com.lms.course.post;
 import com.lms.course.Course;
 import com.lms.course.CourseRepository;
 import com.lms.course.CourseService;
-import com.lms.enrollment.EnrollmentRepository;
 import com.lms.user.Role;
 import com.lms.user.User;
-import com.lms.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -42,9 +40,7 @@ public class CoursePostService {
 
     public CoursePost createPost(CoursePost coursePost, Long courseId, Principal principal) {
         User user = principalToUser(principal);
-        if (!(user.getRole() == Role.ADMIN || user.getRole() == Role.INSTRUCTOR)) {
-            throw new IllegalStateException("UnAuthorized Role");
-        }
+
         if (user.getRole() == Role.INSTRUCTOR) {
             boolean isInstructorForCourse = courseRepository.existsByCourseIdAndInstructor(courseId, user);
             if (!isInstructorForCourse) {
@@ -61,9 +57,6 @@ public class CoursePostService {
     public void deletePost(Long courseId, Long postId, Principal principal) {
         User user = principalToUser(principal);
 
-        if (!(user.getRole() == Role.ADMIN || user.getRole() == Role.INSTRUCTOR)) {
-            throw new IllegalStateException("UnAuthorized Role");
-        }
         if (user.getRole() == Role.INSTRUCTOR) {
             boolean isInstructorForCourse = courseRepository.existsByCourseIdAndInstructor(courseId, user);
             if (!isInstructorForCourse) {

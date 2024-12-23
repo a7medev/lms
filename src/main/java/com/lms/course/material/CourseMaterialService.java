@@ -109,10 +109,6 @@ public class CourseMaterialService {
     public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file, Principal principal) throws IOException {
         User user = principalToUser(principal);
 
-        if (!(user.getRole() == Role.ADMIN || user.getRole() == Role.INSTRUCTOR)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized to upload materials");
-        }
-
         if (user.getRole() == Role.INSTRUCTOR) {
             boolean isInstructorForCourse = courseMaterialRepository.existsByPost_Course_CourseIdAndPost_Course_Instructor(courseId, user);
             if (!isInstructorForCourse) {
@@ -155,9 +151,17 @@ public class CourseMaterialService {
         return savedMaterial;
     }
 
-    public Pair<InputStream, String> getMaterialFile(Long materialId) throws FileNotFoundException {
+    public Pair<InputStream, String> getMaterialFile(Long courseId, Long materialId, Principal principal) throws FileNotFoundException {
+        User user = principalToUser(principal);
+
         CourseMaterial material = courseMaterialRepository.findById(materialId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"));
+
+        Optional<Course> enrolledCourse = enrollmentRepository.findCourseByUserAndCourseId(user, courseId);
+        if (enrolledCourse.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not enrolled in this course");
+        }
+
         Path filePath = Paths.get(material.getFileLocation());
         if (!Files.exists(filePath)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found on server");
@@ -182,9 +186,6 @@ public class CourseMaterialService {
             if (!isInstructorForCourse) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized to delete this material");
             }
-        }
-        if (user.getRole() == Role.STUDENT) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized to delete this material");
         }
         // Delete the physical file
         try {

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -16,6 +18,7 @@ import java.util.Optional;
 
 import static com.lms.util.AuthUtils.principalToUser;
 
+@EnableMethodSecurity
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(path = "courses/{courseId}/posts")
@@ -30,11 +33,6 @@ public class CoursePostController {
         return coursePostService.getPostsForCurrentUser(courseId, user);
     }
 
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping
-//    public List<CoursePost> getPosts(@PathVariable Long courseId) {
-//            return coursePostService.getPosts(courseId);
-//    }
 
     @PreAuthorize("hasAnyAuthority('ADMIN','INSTRUCTOR')")
     @PostMapping
