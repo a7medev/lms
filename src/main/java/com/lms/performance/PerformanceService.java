@@ -196,16 +196,13 @@ public class PerformanceService {
         leftAxis.setTitle(yAxisTitle);
         leftAxis.setCrossBetween(AxisCrossBetween.BETWEEN);
 
-        XDDFDataSource<String> xAxisData = XDDFDataSourcesFactory.fromStringCellRange((XSSFSheet) sheet, new CellRangeAddress(1, rowCount - 1, 1, 1)); // Student names
-        XDDFNumericalDataSource<Double> yAxisData1 = XDDFDataSourcesFactory.fromNumericCellRange((XSSFSheet) sheet, new CellRangeAddress(1, rowCount - 1, 2, 2)); // Assignment Grades
-        XDDFNumericalDataSource<Double> yAxisData2 = XDDFDataSourcesFactory.fromNumericCellRange((XSSFSheet) sheet, new CellRangeAddress(1, rowCount - 1, 3, 3)); // Quiz Grades
+        XDDFDataSource<String> xAxisData = XDDFDataSourcesFactory.fromStringCellRange((XSSFSheet) sheet, new CellRangeAddress(1, rowCount - 1, 1, 1));
+        XDDFNumericalDataSource<Double> yAxisData = XDDFDataSourcesFactory.fromNumericCellRange((XSSFSheet) sheet, new CellRangeAddress(1, rowCount - 1, 4, 4));
 
         XDDFBarChartData barChartData = (XDDFBarChartData) chart.createData(ChartTypes.BAR, bottomAxis, leftAxis);
-        XDDFBarChartData.Series series1 = (XDDFBarChartData.Series) barChartData.addSeries(xAxisData, yAxisData1);
-        series1.setTitle("Assignment Grade", null);
-        XDDFBarChartData.Series series2 = (XDDFBarChartData.Series) barChartData.addSeries(xAxisData, yAxisData2);
-        series2.setTitle("Quiz Grade", null);
-
+        XDDFBarChartData.Series series = (XDDFBarChartData.Series) barChartData.addSeries(xAxisData, yAxisData);
+        series.setTitle("Total Grade", null);
+        
         barChartData.setBarDirection(BarDirection.COL);
         barChartData.setBarGrouping(BarGrouping.CLUSTERED);
 
