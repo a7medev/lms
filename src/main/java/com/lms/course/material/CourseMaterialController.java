@@ -74,15 +74,7 @@ public class CourseMaterialController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'INSTRUCTOR')")
     @DeleteMapping("/{materialId}")
-    public void deletePost(@PathVariable Long postId, @PathVariable Long materialId) {
-        CourseMaterial material = courseMaterialService.getMaterialById(postId,materialId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"));
-
-        String filePath = material.getFileLocation();
-        File file = new File(filePath);
-        if (file.exists()) {
-            file.delete();
-        }
-        courseMaterialService.deleteMaterial(materialId);
+    public void deletePost(@PathVariable Long courseId, @PathVariable Long postId, @PathVariable Long materialId,Principal principal) {
+        courseMaterialService.deleteMaterial(courseId,postId,materialId,principal);
     }
 }

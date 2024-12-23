@@ -170,7 +170,32 @@ public class CourseMaterialService {
         return courseMaterialRepository.findByPostCourseUpdateIdAndMaterialId(postId, materialId);
     }
 
-    public void deleteMaterial(Long materialId) {
+    public void deleteMaterial(Long courseId,Long postId,Long materialId,Principal principal) {
+        User user = principalToUser(principal);
+
+        CourseMaterial material = courseMaterialRepository.findByMaterialIdAndPost_CourseCourseIdAndPost_CourseUpdateId(
+                        materialId, courseId, postId)
+                .orElseThrow(() -> new IllegalStateException("Material not found"));
+
+        if (user.getRole() == Role.INSTRUCTOR) {
+            boolean isInstructorForCourse = material.getPost().getCourse().getInstructor().getId() == user.getId();
+            if (!isInstructorForCourse) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized to delete this material");
+            }
+        }
+        if (user.getRole() == Role.STUDENT) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized to delete this material");
+        }
+        // Delete the physical file
+        try {
+            Path filePath = Paths.get(material.getFileLocation());
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to delete file: " + e.getMessage());
+        }
+
         courseMaterialRepository.deleteById(materialId);
     }
 
