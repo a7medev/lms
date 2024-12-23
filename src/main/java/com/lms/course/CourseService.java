@@ -22,15 +22,12 @@ public class CourseService {
 
     // Based on user role, fetch specific courses
     public List<Course> getCoursesForCurrentUser(User user) {
-        if (user.getRole() == Role.ADMIN) {
-            return courseRepository.findAll();
-        } else if (user.getRole() == Role.INSTRUCTOR) {
-            return courseRepository.findAllByInstructor(user);
-        } else if (user.getRole() == Role.STUDENT) {
-            return enrollmentRepository.findCoursesByUser(user);
-        } else {
-            throw new IllegalStateException("Unauthorized role");
-        }
+        return switch (user.getRole()) {
+            case ADMIN -> courseRepository.findAll();
+            case INSTRUCTOR -> courseRepository.findAllByInstructor(user);
+            case STUDENT -> enrollmentRepository.findCoursesByUser(user);
+            default -> throw new IllegalStateException("Unauthorized role");
+        };
     }
 
     public Course createCourse(Course course) {
@@ -59,8 +56,16 @@ public class CourseService {
         }
     }
 
+    private Course findCourseById(Long courseId) {
+        return courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalStateException("Course not found"));
+    }
 
-    public void deleteCourse(Long courseId) {
+    public void deleteCourse(Long courseId, User user) {
+        Course course = findCourseById(courseId);
+        if (user.getRole() == Role.INSTRUCTOR && course.getInstructor().getId() != user.getId()) {
+            throw new IllegalStateException("You can only delete your own courses");
+        }
         courseRepository.deleteById(courseId);
     }
 }
