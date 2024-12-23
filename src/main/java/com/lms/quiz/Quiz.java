@@ -56,13 +56,6 @@ public class Quiz {
     public int hashCode() {
         return Objects.hashCode(getQuizId());
     }
-    /*@JsonIgnore
-    @ManyToMany
-    @JoinTable(
-            name = "quiz_question",
-            joinColumns = @JoinColumn(name = "quizId"),
-            inverseJoinColumns = @JoinColumn(name = "questionId"))
-    private List<Question> questions;*/
 
     @JsonIgnore
     @ManyToOne
