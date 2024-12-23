@@ -1,7 +1,6 @@
-package com.lms.attendanceTest;
+package com.lms.attendance;
 
 import com.lms.LmsApplication;
-import com.lms.attendance.OTPService;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(classes = LmsApplication.class)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 class AttendanceControllerTest {
 
     @Autowired

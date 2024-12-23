@@ -1,5 +1,6 @@
 package com.lms.enrollment;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lms.course.Course;
 import com.lms.user.User;
 import jakarta.persistence.*;
@@ -36,10 +37,12 @@ public class Enrollment {
 
     // Reference to Courses
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
