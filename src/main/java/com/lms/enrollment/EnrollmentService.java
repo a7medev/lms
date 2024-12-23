@@ -56,7 +56,6 @@ public class EnrollmentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Enrollment does not belong to the specified course");
         }
 
-        System.out.println("Request body: " + updateRequest.toString());
         if (updateRequest.isAccepted()) {
             enrollment.setEnrollmentState(EnrollmentState.ACTIVE);
             enrollment.setCancellationReason(null);
@@ -64,6 +63,8 @@ public class EnrollmentService {
             enrollment.setEnrollmentState(EnrollmentState.CANCELLED);
             enrollment.setCancellationReason(updateRequest.getCancellationReason());
         }
+
+        sendEnrollmentStateNotification(enrollment);
 
         return enrollmentRepository.save(enrollment);
     }
@@ -77,6 +78,23 @@ public class EnrollmentService {
 
         notificationService.saveNotification(notification,
                 "New Enrollment Pending: " + course.getTitle());
+    }
+
+    private void sendEnrollmentStateNotification(Enrollment enrollment) {
+        Course course = enrollment.getCourse();
+
+        String message = switch (enrollment.getEnrollmentState()) {
+            case ACTIVE -> "Your enrollment in course \"" + course.getTitle() + "\" has been approved.";
+            case CANCELLED -> "Your enrollment in course \"" + course.getTitle() + "\" has been cancelled.\nReason: " + enrollment.getCancellationReason();
+            case PENDING -> null;
+        };
+
+        Notification notification = Notification.builder()
+                .user(enrollment.getUser())
+                .message(message)
+                .build();
+
+        notificationService.saveNotification(notification, "Enrollment state update: " + course.getTitle());
     }
 
     private String createNotificationMessage(Enrollment savedEnrollment) {

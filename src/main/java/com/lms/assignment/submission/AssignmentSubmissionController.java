@@ -4,12 +4,10 @@ import com.lms.user.User;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,15 +23,19 @@ public class AssignmentSubmissionController {
 
     private final AssignmentSubmissionService assignmentSubmissionService;
 
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'INSTRUCTOR')")
     @GetMapping
-    public List<AssignmentSubmission> getSubmissions(@PathVariable Long courseId, @PathVariable Long assignmentId) {
-        return assignmentSubmissionService.getSubmissions(assignmentId);
+    public List<AssignmentSubmission> getSubmissions(@PathVariable Long courseId, @PathVariable Long assignmentId, Principal principal) {
+        User user = principalToUser(principal);
+
+        return assignmentSubmissionService.getSubmissions(courseId, assignmentId, user);
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'INSTRUCTOR')")
     @GetMapping("{submissionId}")
-    public AssignmentSubmission getSubmission(@PathVariable Long courseId, @PathVariable Long assignmentId, @PathVariable Long submissionId) {
-        return assignmentSubmissionService.getSubmission(submissionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Submission not found"));
+    public AssignmentSubmission getSubmission(@PathVariable Long courseId, @PathVariable Long assignmentId, @PathVariable Long submissionId, Principal principal) {
+        User user = principalToUser(principal);
+        return assignmentSubmissionService.getSubmission(submissionId, user);
     }
 
     @PostMapping
@@ -44,17 +46,22 @@ public class AssignmentSubmissionController {
         return assignmentSubmissionService.createSubmission(assignmentId, student, file);
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'INSTRUCTOR', 'STUDENT')")
     @GetMapping("{submissionId}/file")
-    public void getSubmissionFile(@PathVariable Long courseId, @PathVariable Long assignmentId, @PathVariable Long submissionId, HttpServletResponse response) throws IOException {
-        Pair<InputStream, String> result = assignmentSubmissionService.getSubmissionFile(assignmentId, submissionId);
+    public void getSubmissionFile(@PathVariable Long courseId, @PathVariable Long assignmentId, @PathVariable Long submissionId, Principal principal, HttpServletResponse response) throws IOException {
+        User user = principalToUser(principal);
+
+        Pair<InputStream, String> result = assignmentSubmissionService.getSubmissionFile(assignmentId, submissionId, user);
         response.setContentType(result.getSecond());
         StreamUtils.copy(result.getFirst(), response.getOutputStream());
     }
 
     @PreAuthorize("hasAuthority('INSTRUCTOR')")
     @PutMapping("{submissionId}")
-    public AssignmentSubmission gradeSubmission(@PathVariable Long courseId, @PathVariable Long assignmentId, @PathVariable Long submissionId, @RequestBody GradeRequest gradeRequest) {
-        return assignmentSubmissionService.gradeSubmission(submissionId, gradeRequest.getGrade());
+    public AssignmentSubmission gradeSubmission(@PathVariable Long courseId, @PathVariable Long assignmentId, @PathVariable Long submissionId, @RequestBody GradeRequest gradeRequest, Principal principal) throws IOException {
+        User user = principalToUser(principal);
+
+        return assignmentSubmissionService.gradeSubmission(submissionId, gradeRequest.getGrade(), user);
     }
 
 }
