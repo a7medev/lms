@@ -9,5 +9,7 @@ import java.util.Optional;
 public interface CoursePostRepository extends JpaRepository<CoursePost, Long> {
     List<CoursePost> findAllByCourseCourseId(Long courseId);
     Optional<CoursePost> findByCourseCourseIdAndCourseUpdateId(Long courseId,Long postId);
+    List<CoursePost> findAllByCourse(Course course);
+
 }
 
