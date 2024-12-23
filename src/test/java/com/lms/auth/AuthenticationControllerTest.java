@@ -2,9 +2,6 @@ package com.lms.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lms.config.JwtService;
-import com.lms.user.Role;
-import com.lms.user.User;
-import com.lms.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
@@ -18,9 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Date;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -43,9 +37,6 @@ class AuthenticationControllerTest {
     @MockitoBean
     private JwtService jwtService;
 
-    @MockitoBean
-    private UserRepository userRepository;
-
     @InjectMocks
     private AuthenticationController authenticationController;
 
@@ -55,21 +46,10 @@ class AuthenticationControllerTest {
         String email = "admin@lms.com";
         String password = "test1234";
 
-        User user = User
-                .builder()
-                .email(email)
-                .password(password)
-                .role(Role.ADMIN)
-                .phone("123456789")
-                .isActive(true)
-                .birthdate(new Date())
-                .build();
-
         AuthenticationRequest authRequest = new AuthenticationRequest(email, password);
         AuthenticationResponse authResponse = new AuthenticationResponse("token");
 
         Mockito.when(authenticationService.authenticate(authRequest)).thenReturn(authResponse);
-        Mockito.when(userRepository.findByEmail(email)).thenReturn(Optional.ofNullable(user));
 
         MvcResult result = mockMvc.perform(post("/users/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +72,6 @@ class AuthenticationControllerTest {
 
         AuthenticationRequest authRequest = new AuthenticationRequest(email, password);
 
-        Mockito.when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
         Mockito.when(authenticationService.authenticate(authRequest)).thenThrow(
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email or password")
         );
