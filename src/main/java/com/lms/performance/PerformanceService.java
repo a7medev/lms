@@ -4,6 +4,8 @@ import com.lms.attendance.AttendanceRecord;
 import com.lms.attendance.AttendanceRepository;
 import com.lms.assignment.submission.AssignmentSubmission;
 import com.lms.assignment.submission.AssignmentSubmissionRepository;
+import com.lms.quiz.quizsubmission.QuizSubmission;
+import com.lms.quiz.quizsubmission.QuizSubmissionRepository;
 import com.lms.user.Role;
 import com.lms.user.User;
 import com.lms.user.UserRepository;
@@ -24,33 +26,18 @@ public class PerformanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final AssignmentSubmissionRepository assignmentSubmissionRepository;
+    private final QuizSubmissionRepository quizSubmissionRepository;
     private final UserRepository userRepository;
 
     @Autowired
     public PerformanceService(AttendanceRepository attendanceRepository,
                               AssignmentSubmissionRepository assignmentSubmissionRepository,
+                              QuizSubmissionRepository quizSubmissionRepository,
                               UserRepository userRepository) {
         this.attendanceRepository = attendanceRepository;
         this.assignmentSubmissionRepository = assignmentSubmissionRepository;
+        this.quizSubmissionRepository = quizSubmissionRepository;
         this.userRepository = userRepository;
-    }
-
-    public byte[] generateGradesExcelReport(Long courseId) {
-        List<User> students = userRepository.findAll().stream()
-                .filter(user -> user.getRole() == Role.STUDENT)
-                .toList(); // Fetch only users with student role
-        Map<Long, Double> grades = calculateGrades(courseId);
-
-        List<List<String>> rows = students.stream()
-                .map(student -> List.of(
-                        String.valueOf(student.getId()),
-                        student.getName(),
-                        grades.get((long) student.getId()).toString()
-                ))
-                .collect(Collectors.toList());
-
-        rows.add(0, List.of("Student ID", "Student Name", "Grade"));
-        return generateExcelFile("Grades Report", rows, "Scores Chart", "Student Name", "Scores");
     }
 
     public byte[] generateAttendanceExcelReport(Long courseId) {
@@ -73,7 +60,7 @@ public class PerformanceService {
         header.add("Total (%)");
 
         List<List<String>> rows = new ArrayList<>();
-        rows.add(header); // Add the header row
+        rows.add(header);
 
         for (Map.Entry<Long, List<AttendanceRecord>> entry : attendanceByStudent.entrySet()) {
             Long studentId = entry.getKey();
@@ -114,14 +101,44 @@ public class PerformanceService {
                 ));
     }
 
-    private Map<Long, Double> calculateGrades(Long courseId) {
-        List<AssignmentSubmission> submissions = assignmentSubmissionRepository.findAllByAssignmentId(courseId);
+    public byte[] generateGradesExcelReport(Long courseId) {
+        List<User> students = userRepository.findAll().stream()
+                .filter(user -> user.getRole() == Role.STUDENT)
+                .toList(); // Fetch only users with student role
+        Map<Long, Double> assignmentGrades = calculateAssignmentGrades(courseId);
+        Map<Long, Double> quizGrades = calculateQuizGrades(courseId);
+        List<List<String>> rows = students.stream()
+                .filter(student -> assignmentGrades.containsKey((long) student.getId()) || quizGrades.containsKey((long) student.getId()))
+                .map(student -> List.of(
+                        String.valueOf(student.getId()),
+                        student.getName(),
+                        assignmentGrades.getOrDefault((long) student.getId(), 0.0).toString(),
+                        quizGrades.getOrDefault((long) student.getId(), 0.0).toString(),
+                        String.valueOf(assignmentGrades.getOrDefault((long) student.getId(), 0.0) + quizGrades.getOrDefault((long) student.getId(), 0.0))
+                ))
+                .collect(Collectors.toList());
 
+        rows.add(0, List.of("Student ID", "Student Name", "Assignment Grade", "Quiz Grade", "Total"));
+        return generateExcelFile("Grades Report", rows, "Scores Chart", "Student Name", "Scores");
+    }
+
+    private Map<Long, Double> calculateAssignmentGrades(Long courseId) {
+        List<AssignmentSubmission> submissions = assignmentSubmissionRepository.findAllByAssignmentId(courseId);
         return submissions.stream()
                 .filter(submission -> submission.getScore() != null)
                 .collect(Collectors.groupingBy(
                         submission -> (long) submission.getStudent().getId(),
                         Collectors.averagingDouble(AssignmentSubmission::getScore)
+                ));
+    }
+    private Map<Long, Double> calculateQuizGrades(Long courseId) {
+        List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findAll().stream()
+                .filter(submission -> submission.getQuiz().getCourse().getCourseId().equals(courseId))
+                .toList();
+        return quizSubmissions.stream()
+                .collect(Collectors.groupingBy(
+                        submission -> (long) submission.getStudent().getId(),
+                        Collectors.averagingDouble(QuizSubmission::getMarks)
                 ));
     }
 
@@ -150,7 +167,12 @@ public class PerformanceService {
                 }
             }
 
-            addBarChart(sheet, data.size(), data.get(0).size(), chartTitle, xAxisTitle, yAxisTitle);
+            if (sheetName.equals("Grades Report")) {
+                addGradesBarChart(sheet, data.size(), data.get(0).size(), chartTitle, xAxisTitle, yAxisTitle);
+            }
+            else if (sheetName.equals("Attendance Report")) {
+                addAttendancePieChart(sheet, data.size(), data.get(0).size(), chartTitle);
+            }
 
             workbook.write(outputStream);
             return outputStream.toByteArray();
@@ -159,19 +181,14 @@ public class PerformanceService {
         }
     }
 
-    private void addBarChart(Sheet sheet, int rowCount, int columnCount, String chartTitle, String xAxisTitle, String yAxisTitle) {
-        // Create a drawing canvas on the sheet
+    private void addGradesBarChart(Sheet sheet, int rowCount, int columnCount, String chartTitle, String xAxisTitle, String yAxisTitle) {
         XSSFDrawing drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
-
-        // Define the position of the chart on the sheet
         XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, columnCount + 2, 1, columnCount + 8, 15);
 
-        // Create the chart
         XDDFChart chart = drawing.createChart(anchor);
         chart.setTitleText(chartTitle);
         chart.setTitleOverlay(false);
 
-        // Define the data range for the chart
         XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
         bottomAxis.setTitle(xAxisTitle);
 
@@ -179,22 +196,41 @@ public class PerformanceService {
         leftAxis.setTitle(yAxisTitle);
         leftAxis.setCrossBetween(AxisCrossBetween.BETWEEN);
 
-        // Define the data sources for the chart
-        XDDFDataSource<String> xAxisData = XDDFDataSourcesFactory.fromStringCellRange((XSSFSheet) sheet,
-                new CellRangeAddress(1, rowCount - 1, 0, 0)); // Student names
-        XDDFNumericalDataSource<Double> yAxisData = XDDFDataSourcesFactory.fromNumericCellRange((XSSFSheet) sheet,
-                new CellRangeAddress(1, rowCount - 1, columnCount - 1, columnCount - 1)); // Scores or percentages
+        XDDFDataSource<String> xAxisData = XDDFDataSourcesFactory.fromStringCellRange((XSSFSheet) sheet, new CellRangeAddress(1, rowCount - 1, 1, 1)); // Student names
+        XDDFNumericalDataSource<Double> yAxisData1 = XDDFDataSourcesFactory.fromNumericCellRange((XSSFSheet) sheet, new CellRangeAddress(1, rowCount - 1, 2, 2)); // Assignment Grades
+        XDDFNumericalDataSource<Double> yAxisData2 = XDDFDataSourcesFactory.fromNumericCellRange((XSSFSheet) sheet, new CellRangeAddress(1, rowCount - 1, 3, 3)); // Quiz Grades
 
-        // Create the chart data
         XDDFBarChartData barChartData = (XDDFBarChartData) chart.createData(ChartTypes.BAR, bottomAxis, leftAxis);
-        XDDFBarChartData.Series series = (XDDFBarChartData.Series) barChartData.addSeries(xAxisData, yAxisData);
-        series.setTitle(sheet.getRow(0).getCell(columnCount - 1).getStringCellValue(), null); // Set the series title
+        XDDFBarChartData.Series series1 = (XDDFBarChartData.Series) barChartData.addSeries(xAxisData, yAxisData1);
+        series1.setTitle("Assignment Grade", null);
+        XDDFBarChartData.Series series2 = (XDDFBarChartData.Series) barChartData.addSeries(xAxisData, yAxisData2);
+        series2.setTitle("Quiz Grade", null);
 
-        // Customize bar chart appearance
         barChartData.setBarDirection(BarDirection.COL);
         barChartData.setBarGrouping(BarGrouping.CLUSTERED);
 
-        // Plot the chart
         chart.plot(barChartData);
     }
+
+
+    private void addAttendancePieChart(Sheet sheet, int rowCount, int columnCount, String chartTitle) {
+        XSSFDrawing drawing = (XSSFDrawing) sheet.createDrawingPatriarch();
+        XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, columnCount + 2, 1, columnCount + 8, 15);
+
+        XDDFChart chart = drawing.createChart(anchor);
+        chart.setTitleText(chartTitle);
+        chart.setTitleOverlay(false);
+
+        XDDFDataSource<String> categories = XDDFDataSourcesFactory.fromStringCellRange((XSSFSheet) sheet,
+                new CellRangeAddress(1, rowCount - 1, 0, 0)); // Student names
+        XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromNumericCellRange((XSSFSheet) sheet,
+                new CellRangeAddress(1, rowCount - 1, columnCount - 1, columnCount - 1)); // Attendance percentages
+
+        XDDFPieChartData data = (XDDFPieChartData) chart.createData(ChartTypes.PIE, null, null);
+        XDDFPieChartData.Series series = (XDDFPieChartData.Series) data.addSeries(categories, values);
+        series.setTitle(chartTitle, null);
+
+        chart.plot(data);
+    }
+
 }
