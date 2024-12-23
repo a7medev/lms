@@ -106,7 +106,7 @@ public class CourseMaterialService {
     }
 
 
-    public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file) throws IOException, MessagingException {
+    public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File cannot be empty");
         }
@@ -161,7 +161,7 @@ public class CourseMaterialService {
         courseMaterialRepository.deleteById(materialId);
     }
 
-    private void sendMaterialUploadNotification(Long courseId, CourseMaterial savedMaterial) throws MessagingException {
+    private void sendMaterialUploadNotification(Long courseId, CourseMaterial savedMaterial) {
         List<Enrollment> enrollments = enrollmentRepository.findAllByCourseCourseId(courseId);
         String notificationMessage = "New material uploaded for Course " + savedMaterial.getPost().getCourse().getTitle();
 
