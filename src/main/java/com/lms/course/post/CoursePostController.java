@@ -38,11 +38,8 @@ public class CoursePostController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN','INSTRUCTOR')")
     @PostMapping
-    public ResponseEntity<CoursePost> createPost(@RequestBody CoursePost coursePost, @PathVariable Long courseId) {
-        Course course = new Course();
-        course.setCourseId(courseId);
-        coursePost.setCourse(course);
-        CoursePost createdPost = coursePostService.createPost(coursePost);
+    public ResponseEntity<CoursePost> createPost(@RequestBody CoursePost coursePost, @PathVariable Long courseId, Principal principal) {
+        CoursePost createdPost = coursePostService.createPost(coursePost,courseId,principal);
         return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
     }
 

@@ -106,7 +106,20 @@ public class CourseMaterialService {
     }
 
 
-    public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file) throws IOException {
+    public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file, Principal principal) throws IOException {
+        User user = principalToUser(principal);
+
+        if (!(user.getRole() == Role.ADMIN || user.getRole() == Role.INSTRUCTOR)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized to upload materials");
+        }
+
+        if (user.getRole() == Role.INSTRUCTOR) {
+            boolean isInstructorForCourse = courseMaterialRepository.existsByPost_Course_CourseIdAndPost_Course_Instructor(courseId, user);
+            if (!isInstructorForCourse) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the instructor for this course");
+            }
+        }
+
         if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File cannot be empty");
         }

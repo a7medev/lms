@@ -58,8 +58,9 @@ public class CourseMaterialController {
     public ResponseEntity<CourseMaterial> uploadMaterial(
             @PathVariable Long courseId,
             @PathVariable Long postId,
-            @RequestParam("file") MultipartFile file) throws IOException{
-        CourseMaterial uploadedMaterial = courseMaterialService.uploadMaterial(courseId, postId, file);
+            @RequestParam("file") MultipartFile file,
+            Principal principal) throws IOException{
+        CourseMaterial uploadedMaterial = courseMaterialService.uploadMaterial(courseId, postId, file,principal);
         return new ResponseEntity<>(uploadedMaterial, HttpStatus.CREATED);
     }
 
