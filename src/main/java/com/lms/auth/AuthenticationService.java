@@ -44,7 +44,9 @@ public class AuthenticationService {
                        request.getPassword()
                )
         );
-        var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email or password")
+        );
 
         var token = jwtService.generateToken(user);
 
