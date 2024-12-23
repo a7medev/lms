@@ -25,6 +25,8 @@ dependencies {
     implementation 'org.projectlombok:lombok:1.18.36'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.apache.poi:poi:5.3.0'
+    implementation 'org.apache.poi:poi-ooxml:5.3.0'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     runtimeOnly 'com.mysql:mysql-connector-j'
