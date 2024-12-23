@@ -20,6 +20,7 @@ import com.lms.quiz.quizsubmission.QuizSubmission;
 import com.lms.quiz.quizsubmission.QuizSubmissionService;
 import com.lms.quiz.quizsubmission.SubmissionState;
 import com.lms.user.User;
+import com.lms.util.AuthUtils;
 import jakarta.persistence.DiscriminatorValue;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -41,8 +42,9 @@ public class QuizService {
     private final QuestionBankService questionBankService;
     private final EnrollmentRepository enrollmentRepository;
     private final NotificationService notificationService;
-    public Collection<Quiz> getAllQuizzes(Long courseId, boolean upcoming) {
-
+    public Collection<Quiz> getAllQuizzes(Long courseId, boolean upcoming,User instructor) {
+        if(!(AuthUtils.hasCourseAccess(this.courseService.getCourseById(courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found")),instructor,enrollmentRepository)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Access denied");
         if(upcoming){
             LocalDateTime now = LocalDateTime.now();
             return this.quizRepository.findAllByCourseCourseIdAndStartDateAfter(courseId, now);
@@ -52,7 +54,9 @@ public class QuizService {
     public Optional<Quiz> getQuiz(long quizId,long courseId) {
         return this.quizRepository.findByQuizIdAndCourseCourseId(quizId,courseId);
     }
-    public Quiz addQuiz(Quiz quiz, long courseId) {
+    public Quiz addQuiz(Quiz quiz, long courseId, User instructor) {
+        if(!(AuthUtils.hasCourseAccess(this.courseService.getCourseById(courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found")),instructor,enrollmentRepository)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Access denied");
         Course course = this.courseService.getCourseById(courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found"));
         quiz.setCourse(course);
         quiz.setCreationDate(LocalDateTime.now());
@@ -61,11 +65,14 @@ public class QuizService {
 
     }
     public Collection<QuizQuestionDTO> startQuiz(long quizId, long courseId, User student) {
+        if(!(AuthUtils.hasCourseAccess(this.courseService.getCourseById(courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found")),student,enrollmentRepository)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Access denied");
+
         Quiz targetedQuiz = this.quizRepository.findByQuizIdAndCourseCourseId(quizId,courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz not found"));
             if(targetedQuiz.getStartDate().isAfter(LocalDateTime.now()))
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Quiz has not started yet");
 
-        if(this.quizSubmissionService.getSubmission(student.getId(), quizId).isPresent())
+        if(this.quizSubmissionService.getSubmission(student.getId(), quizId,student,courseId).isPresent())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Quiz has already started");
 
         QuizSubmission quizSubmission =  QuizSubmission.builder()
