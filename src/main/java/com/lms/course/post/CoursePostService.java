@@ -20,33 +20,29 @@ import static com.lms.util.AuthUtils.principalToUser;
 public class CoursePostService {
 
     private final CoursePostRepository coursePostRepository;
-    private final UserRepository userRepository;
-    private final EnrollmentRepository enrollmentRepository;
-    public List<CoursePost> getPosts(long courseId) {
-        return coursePostRepository.findAllByCourseCourseId(courseId);
+    private final CourseService courseService;
+
+    public List<CoursePost> getPostsForCurrentUser(Long courseId, User user) {
+        Course course = courseService.getCourseByIdForCurrentUser(courseId, user);
+        return course.getPosts();
+    }
+
+    public Optional<CoursePost> getPostByIdForCurrentUser(Long courseId, Long postId, User user) {
+        Course course = courseService.getCourseByIdForCurrentUser(courseId, user);
+
+        return course.getPosts().stream()
+                .filter(post -> post.getCourseUpdateId().equals(postId))
+                .findFirst();
     }
 
     public CoursePost createPost(CoursePost coursePost) {
         return coursePostRepository.save(coursePost);
-    }
 
-    public Optional<CoursePost> getPostById(Long courseId, Long postId) {
-        return coursePostRepository.findByCourseCourseIdAndCourseUpdateId(courseId,postId);
     }
 
     public void deletePost(Long postId) {
         coursePostRepository.deleteById(postId);
     }
 
-    public List<CoursePost> getPostsForCurrentStudent(Principal currentUser) {
-        User user = principalToUser(currentUser);
 
-        List<Course> enrolledCourses = enrollmentRepository.findAllByUser(user).stream()
-                .map(enrollment -> enrollment.getCourse())
-                .toList();
-
-        return enrolledCourses.stream()
-                .flatMap(course -> coursePostRepository.findAllByCourse(course).stream())
-                .collect(Collectors.toList());
-    }
 }

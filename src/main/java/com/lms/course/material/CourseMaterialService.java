@@ -3,10 +3,13 @@ package com.lms.course.material;
 import com.lms.assignment.submission.AssignmentSubmission;
 import com.lms.course.Course;
 import com.lms.course.post.CoursePost;
+import com.lms.course.post.CoursePostRepository;
+import com.lms.course.post.CoursePostService;
 import com.lms.enrollment.Enrollment;
 import com.lms.enrollment.EnrollmentRepository;
 import com.lms.notification.Notification;
 import com.lms.notification.NotificationService;
+import com.lms.user.Role;
 import com.lms.user.User;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +30,10 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.lms.util.AuthUtils.principalToUser;
+
 @RequiredArgsConstructor
 @Service
 public class CourseMaterialService {
@@ -37,8 +42,60 @@ public class CourseMaterialService {
     private final EnrollmentRepository enrollmentRepository;
     private final NotificationService notificationService;
 
-    public List<CourseMaterial> getAllMaterials(Long postId) {
-        return courseMaterialRepository.findAllByPostCourseUpdateId(postId);
+    public List<CourseMaterial> getMaterialsForUser(Long courseId, Long postId, Principal principal) {
+        User user = principalToUser(principal);
+        switch (user.getRole()) {
+            case ADMIN:
+                return courseMaterialRepository.findAll();
+            case INSTRUCTOR:
+                return courseMaterialRepository.findAllByPost_Course_Instructor(user);
+            case STUDENT:
+                checkStudentEnrollment(user, courseId);
+                return courseMaterialRepository.findAllByPost_CourseCourseIdAndPost_CourseUpdateId(courseId, postId);
+            default:
+                throw new IllegalStateException("Unauthorized role");
+        }
+    }
+
+    public CourseMaterial getMaterialByIdForUser(Long courseId, Long postId, Long materialId, Principal principal) {
+        User user = principalToUser(principal);
+        switch (user.getRole()) {
+            case ADMIN:
+                return getMaterialById(materialId);
+            case INSTRUCTOR:
+                return getInstructorMaterial(courseId, postId, materialId, user);
+            case STUDENT:
+                checkStudentEnrollment(user, courseId);
+                return getStudentMaterial(courseId, postId, materialId);
+            default:
+                throw new IllegalStateException("Unauthorized role");
+        }
+    }
+
+    private void checkStudentEnrollment(User user, Long courseId) {
+        boolean isEnrolled = enrollmentRepository.findAllByUser(user).stream()
+                .anyMatch(enrollment -> enrollment.getCourse().getCourseId().equals(courseId));
+        if (!isEnrolled) {
+            throw new IllegalStateException("You are not enrolled in this course.");
+        }
+    }
+
+    private CourseMaterial getInstructorMaterial(Long courseId, Long postId, Long materialId, User user) {
+        CourseMaterial material = courseMaterialRepository.findByMaterialIdAndPost_Course_Instructor(materialId, user);
+        if (material == null || !material.getPost().getCourse().getCourseId().equals(courseId)) {
+            throw new IllegalStateException("You don't have access to this material");
+        }
+        return material;
+    }
+
+    private CourseMaterial getStudentMaterial(Long courseId, Long postId, Long materialId) {
+        return courseMaterialRepository.findByMaterialIdAndPost_CourseCourseIdAndPost_CourseUpdateId(materialId, courseId, postId)
+                .orElseThrow(() -> new IllegalStateException("Material not found"));
+    }
+
+    private CourseMaterial getMaterialById(Long materialId) {
+        return courseMaterialRepository.findById(materialId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"));
     }
 
     private Path uploadPath(long courseId, long postId, String extension) {
@@ -82,7 +139,8 @@ public class CourseMaterialService {
         CourseMaterial savedMaterial = courseMaterialRepository.save(courseMaterial);
         sendMaterialUploadNotification(courseId, savedMaterial);
 
-        return savedMaterial;    }
+        return savedMaterial;
+    }
 
     public Pair<InputStream, String> getMaterialFile(Long materialId) throws FileNotFoundException {
         CourseMaterial material = courseMaterialRepository.findById(materialId)
@@ -96,23 +154,11 @@ public class CourseMaterialService {
     }
 
     public Optional<CourseMaterial> getMaterialById(Long postId, Long materialId) {
-        return courseMaterialRepository.findByPostCourseUpdateIdAndMaterialId(postId,materialId);
+        return courseMaterialRepository.findByPostCourseUpdateIdAndMaterialId(postId, materialId);
     }
 
     public void deleteMaterial(Long materialId) {
         courseMaterialRepository.deleteById(materialId);
-    }
-
-    public List<CourseMaterial> getMaterialsForCurrentStudent(Long courseId, Principal currentUser) {
-        User user = principalToUser(currentUser);
-
-        boolean isEnrolled = enrollmentRepository.findAllByUser(user).stream()
-                .anyMatch(enrollment -> enrollment.getCourse().getCourseId().equals(courseId));
-
-        if (!isEnrolled) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not enrolled in this course.");
-        }
-        return courseMaterialRepository.findAllByCourseCourseId(courseId);
     }
 
     private void sendMaterialUploadNotification(Long courseId, CourseMaterial savedMaterial) throws MessagingException {
