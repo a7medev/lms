@@ -24,7 +24,7 @@ public class QuizSubmissionController {
     private final UserService userService;
     private final QuizService quizService;
     @PostMapping
-    @PreAuthorize("hasAuthority('STUDENT')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','ADMIN')")
     public ResponseEntity<?> submitAnswers(@RequestBody List<QuizAnswerDTO> studentAnswers, @PathVariable long quizId, @PathVariable long courseId, Principal principal)
     {
         User currentStudent = this.userService.getUser(principal);
@@ -47,7 +47,7 @@ public class QuizSubmissionController {
             return new ResponseEntity<>("No such quiz exists.",HttpStatus.NOT_FOUND);
         return ResponseEntity.ok(this.quizSubmissionService.getQuizSubmission(submissionId,quizId,this.userService.getUser(principal),courseId));
     }
-    @PreAuthorize("hasAuthority('INSTRUCTOR')")
+    @PreAuthorize("hasAnyAuthority('INSTRUCTOR','ADMIN')")
     @GetMapping
     public ResponseEntity<List<QuizSubmission>> getAllSubmissionsOfAQuiz(@PathVariable long quizId, @PathVariable long courseId,Principal principal)
     {
