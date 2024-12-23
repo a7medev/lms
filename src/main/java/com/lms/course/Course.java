@@ -7,6 +7,7 @@ import com.lms.course.post.CoursePost;
 import com.lms.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotNull;
@@ -18,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table
+@Builder
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
