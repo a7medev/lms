@@ -2,14 +2,11 @@ package com.lms.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.Optional;
 
 import static com.lms.util.AuthUtils.principalToUser;
@@ -71,12 +68,11 @@ public class UserService {
         return newValue;
     }
 
-    private Date getBirthdate(Date previousBirthdate, LocalDateTime newBirthdate) {
+    private LocalDateTime getBirthdate(LocalDateTime previousBirthdate, LocalDateTime newBirthdate) {
         if (newBirthdate == null) {
             return previousBirthdate;
         }
-        var localBirthdate = newBirthdate.atZone(ZoneId.systemDefault()).toInstant();
-        return Date.from(localBirthdate);
+        return newBirthdate;
     }
 
     private String getPassword(String oldPassword, String newPassword) {
