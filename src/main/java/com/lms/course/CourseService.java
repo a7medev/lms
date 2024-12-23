@@ -20,6 +20,9 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
 
+    public List<Course> getAllCourses() {
+        return courseRepository.findAll();
+    }
     // Based on user role, fetch specific courses
     public List<Course> getCoursesForCurrentUser(User user) {
         return switch (user.getRole()) {
