@@ -3,7 +3,6 @@ package com.lms.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lms.config.JwtService;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,10 +35,6 @@ class AuthenticationControllerTest {
 
     @MockitoBean
     private JwtService jwtService;
-
-    @InjectMocks
-    private AuthenticationController authenticationController;
-
 
     @Test
     public void givenValidUserThenAuthenticateReturnsToken() throws Exception {
