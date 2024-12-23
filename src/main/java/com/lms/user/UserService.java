@@ -2,14 +2,11 @@ package com.lms.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.Optional;
 
 import static com.lms.util.AuthUtils.principalToUser;
@@ -18,14 +15,18 @@ import static com.lms.util.AuthUtils.principalToUser;
 @RequiredArgsConstructor
 public class UserService {
 
-    public ResponseEntity<String> changeRole(RoleChangeRequest request) {
+    public ResponseEntity<String> editUserByAdmin(AdminEditRequest request) {
         Optional<User> entity = userRepository.findByEmail(request.getEmail());
-
         if(entity.isEmpty()) {
             return ResponseEntity.badRequest().body("User not found!!");
         }
 
         var user = entity.get();
+
+        if (request.getActive() != null) {
+            boolean isActive = request.getActive();
+            user.setIsActive(isActive);
+        }
 
         try {
             Role role = Role.valueOf(request.getRole().toUpperCase());
@@ -71,12 +72,11 @@ public class UserService {
         return newValue;
     }
 
-    private Date getBirthdate(Date previousBirthdate, LocalDateTime newBirthdate) {
+    private LocalDateTime getBirthdate(LocalDateTime previousBirthdate, LocalDateTime newBirthdate) {
         if (newBirthdate == null) {
             return previousBirthdate;
         }
-        var localBirthdate = newBirthdate.atZone(ZoneId.systemDefault()).toInstant();
-        return Date.from(localBirthdate);
+        return newBirthdate;
     }
 
     private String getPassword(String oldPassword, String newPassword) {
