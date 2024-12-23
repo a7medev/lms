@@ -202,7 +202,7 @@ public class PerformanceService {
         XDDFBarChartData barChartData = (XDDFBarChartData) chart.createData(ChartTypes.BAR, bottomAxis, leftAxis);
         XDDFBarChartData.Series series = (XDDFBarChartData.Series) barChartData.addSeries(xAxisData, yAxisData);
         series.setTitle("Total Grade", null);
-        
+
         barChartData.setBarDirection(BarDirection.COL);
         barChartData.setBarGrouping(BarGrouping.CLUSTERED);
 
