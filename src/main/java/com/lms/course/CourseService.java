@@ -27,16 +27,10 @@ public class CourseService {
         } else if (user.getRole() == Role.INSTRUCTOR) {
             return courseRepository.findAllByInstructor(user);
         } else if (user.getRole() == Role.STUDENT) {
-            return getCoursesForStudent(user);
+            return enrollmentRepository.findCoursesByUser(user);
         } else {
             throw new IllegalStateException("Unauthorized role");
         }
-    }
-
-    public List<Course> getCoursesForStudent(User user) {
-        return enrollmentRepository.findAllByUser(user).stream()
-                .map(Enrollment::getCourse)
-                .collect(Collectors.toList());
     }
 
     public Course createCourse(Course course) {
@@ -56,15 +50,10 @@ public class CourseService {
             if (course.getInstructor().getId() != user.getId()) {
                 throw new IllegalStateException("Instructor is not associated with this course");
             }
-
             return course;
         } else if (user.getRole() == Role.STUDENT) {
-            Optional<Course> course = enrollmentRepository.findAllByUser(user).stream()
-                    .map(Enrollment::getCourse)
-                    .filter(c -> c.getCourseId().equals(courseId))
-                    .findFirst();
-
-            return course.orElseThrow(() -> new IllegalStateException("Course not found or not enrolled"));
+            return enrollmentRepository.findCourseByUserAndCourseId(user, courseId)
+                    .orElseThrow(() -> new IllegalStateException("Course not found or not enrolled"));
         } else {
             throw new IllegalStateException("Unauthorized role detected");
         }
