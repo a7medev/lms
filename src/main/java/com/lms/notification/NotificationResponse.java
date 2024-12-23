@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NotificationResponse {
-    int userId;
+    Long userId;
     int notificationId;
     String message;
     boolean isRead;

@@ -1,5 +1,9 @@
 package com.lms.attendance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.lms.course.Course;
+import com.lms.course.lesson.Lesson;
+import com.lms.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,6 +25,24 @@ public class AttendanceRecord {
 
     @EmbeddedId
     private AttendanceKey id;
+
+    @JsonIgnore
+    @ManyToOne
+    @MapsId("courseId")
+    @JoinColumn(name = "course_id", referencedColumnName = "courseId")
+    private Course course;
+
+    @JsonIgnore
+    @ManyToOne
+    @MapsId("lessonId")
+    @JoinColumn(name = "lesson_id", referencedColumnName = "id")
+    private Lesson lesson;
+
+    @JsonIgnore
+    @ManyToOne
+    @MapsId("studentId")
+    @JoinColumn(name = "student_id", referencedColumnName = "id")
+    private User student;
 
     private boolean attended;
 
