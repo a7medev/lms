@@ -19,7 +19,7 @@ import java.security.Principal;
 import java.util.Collection;
 
 @RestController
-@PreAuthorize("hasAuthority('INSTRUCTOR')")
+@PreAuthorize("hasAnyAuthority('INSTRUCTOR','ADMIN')")
 @RequestMapping("/courses/{courseId}/questions")
 @AllArgsConstructor
 public class QuestionBankController {
