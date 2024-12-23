@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RoleChangeRequest {
+public class AdminEditRequest {
     private String email;
     private String role;
+    private Boolean active;
 }

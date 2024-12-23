@@ -27,7 +27,7 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/admin/edit")
-    public ResponseEntity<String> editUserRole(@RequestBody @Validated RoleChangeRequest request) {
-        return userService.changeRole(request);
+    public ResponseEntity<String> editUserRole(@RequestBody @Validated AdminEditRequest request) {
+        return userService.editUserByAdmin(request);
     }
 }

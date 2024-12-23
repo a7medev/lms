@@ -15,14 +15,18 @@ import static com.lms.util.AuthUtils.principalToUser;
 @RequiredArgsConstructor
 public class UserService {
 
-    public ResponseEntity<String> changeRole(RoleChangeRequest request) {
+    public ResponseEntity<String> editUserByAdmin(AdminEditRequest request) {
         Optional<User> entity = userRepository.findByEmail(request.getEmail());
-
         if(entity.isEmpty()) {
             return ResponseEntity.badRequest().body("User not found!!");
         }
 
         var user = entity.get();
+
+        if (request.getActive() != null) {
+            boolean isActive = request.getActive();
+            user.setActive(isActive);
+        }
 
         try {
             Role role = Role.valueOf(request.getRole().toUpperCase());
