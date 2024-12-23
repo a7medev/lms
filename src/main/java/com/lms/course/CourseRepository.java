@@ -9,4 +9,5 @@ import java.util.Optional;
 
 public interface CourseRepository extends JpaRepository<Course, Long> {
     Optional<Course> findByCourseId(Long courseId);
+    List<Course> findAllByInstructor(User user);
 }

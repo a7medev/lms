@@ -1,6 +1,7 @@
 package com.lms.course;
 
 import com.lms.user.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,20 +13,18 @@ import java.security.Principal;
 import java.util.List;
 
 import static com.lms.util.AuthUtils.principalToUser;
-
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/courses")
 public class CourseController {
-    CourseService courseService;
-
     @Autowired
-    public CourseController(CourseService courseService) {
-        this.courseService = courseService;
-    }
+    private final CourseService courseService;
 
+    @PreAuthorize("hasAnyAuthority('STUDENT', 'INSTRUCTOR', 'ADMIN')")
     @GetMapping
-    public List<Course> getAllCourses() {
-        return courseService.getAllCourses();
+    public List<Course> getCoursesForCurrentUser(Principal principal) {
+        User user = principalToUser(principal);
+        return courseService.getCoursesForCurrentUser(user);
     }
 
     @PreAuthorize("hasAnyAuthority('INSTRUCTOR', 'ADMIN')")
@@ -38,13 +37,15 @@ public class CourseController {
         return new ResponseEntity<>(createdCourse, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyAuthority('STUDENT', 'INSTRUCTOR', 'ADMIN')")
     @GetMapping("/{courseId}")
-    public Course getCourseById(@PathVariable Long courseId) {
-        return courseService.getCourseById(courseId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+    public Course getCourseById(@PathVariable Long courseId, Principal principal) {
+        User user = principalToUser(principal);
+        return courseService.getCourseByIdForCurrentUser(courseId, user);
     }
 
 
+    @PreAuthorize("hasAnyAuthority('INSTRUCTOR', 'ADMIN')")
     @DeleteMapping("/{courseId}")
     public void deleteCourse(@PathVariable Long courseId) {
         courseService.deleteCourse(courseId);
