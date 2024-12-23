@@ -24,38 +24,37 @@ public class QuizSubmissionController {
     private final UserService userService;
     private final QuizService quizService;
     @PostMapping
-    @PreAuthorize("hasAuthority('STUDENT')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','ADMIN')")
     public ResponseEntity<?> submitAnswers(@RequestBody List<QuizAnswerDTO> studentAnswers, @PathVariable long quizId, @PathVariable long courseId, Principal principal)
     {
-        User currentStudent = userService.getUser(principal);
-
+        User currentStudent = this.userService.getUser(principal);
         if(checkIfQuizBelongsToCourse(quizId,courseId))
             return new ResponseEntity<>("No such quiz exists.",HttpStatus.NOT_FOUND);
 
-        Optional<QuizSubmission> submission =quizSubmissionService.getSubmission(currentStudent.getId(), quizId);
+        Optional<QuizSubmission> submission =quizSubmissionService.getSubmission(currentStudent.getId(), quizId,currentStudent,courseId);
         if(submission.isEmpty())
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
         if(submission.get().getSubmissionState() == SubmissionState.SUBMITTED)
             return new ResponseEntity<>(Pair.of("Quiz has been already attempted",submission.get()),HttpStatus.CONFLICT);
 
-        return ResponseEntity.ok(this.quizSubmissionService.submitQuiz(quizId,currentStudent,studentAnswers));
+        return ResponseEntity.ok(this.quizSubmissionService.submitQuiz(quizId,currentStudent,studentAnswers,courseId));
     }
     @GetMapping("/{submissionId}")
-    public ResponseEntity<?> getSubmission(@PathVariable long submissionId,@PathVariable long quizId,@PathVariable long courseId)
+    public ResponseEntity<?> getSubmission(@PathVariable long submissionId,@PathVariable long quizId,@PathVariable long courseId,Principal principal)
     {
         if(checkIfQuizBelongsToCourse(quizId,courseId))
             return new ResponseEntity<>("No such quiz exists.",HttpStatus.NOT_FOUND);
-        return ResponseEntity.ok(this.quizSubmissionService.getQuizSubmission(submissionId,quizId));
+        return ResponseEntity.ok(this.quizSubmissionService.getQuizSubmission(submissionId,quizId,this.userService.getUser(principal),courseId));
     }
-    @PreAuthorize("hasAuthority('INSTRUCTOR')")
+    @PreAuthorize("hasAnyAuthority('INSTRUCTOR','ADMIN')")
     @GetMapping
-    public ResponseEntity<List<QuizSubmission>> getAllSubmissionsOfAQuiz(@PathVariable long quizId, @PathVariable long courseId)
+    public ResponseEntity<List<QuizSubmission>> getAllSubmissionsOfAQuiz(@PathVariable long quizId, @PathVariable long courseId,Principal principal)
     {
         if(checkIfQuizBelongsToCourse(quizId,courseId))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,"No such quiz exists.");
 
-        return ResponseEntity.ok(this.quizSubmissionService.getAllQuizSubmissions(quizId));
+        return ResponseEntity.ok(this.quizSubmissionService.getAllQuizSubmissions(quizId,this.userService.getUser(principal),courseId));
     }
     private boolean checkIfQuizBelongsToCourse(long quizId, long courseId) {
         return this.quizService.getQuiz(quizId,courseId).isEmpty();

@@ -29,18 +29,18 @@ public class QuizController {
     private final QuizSubmissionService quizSubmissionService;
     private final UserService userService;
 
-    @PreAuthorize("hasAuthority('INSTRUCTOR')")
+    @PreAuthorize("hasAnyAuthority('INSTRUCTOR','ADMIN')")
     @GetMapping
-    public Collection<Quiz> getAll(@PathVariable("courseId") long courseId, @RequestParam(defaultValue = "false") boolean upcoming){
-        return this.quizService.getAllQuizzes(courseId, upcoming);
+    public Collection<Quiz> getAll(@PathVariable("courseId") long courseId, @RequestParam(defaultValue = "false") boolean upcoming,Principal principal){
+        return this.quizService.getAllQuizzes(courseId, upcoming,this.userService.getUser(principal));
     }
 
-    @PreAuthorize("hasAuthority('STUDENT')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','ADMIN')")
     @GetMapping("/{quizId}")
     public Collection<QuizQuestionDTO> startQuiz(@PathVariable long courseId, @PathVariable long quizId,Principal principal){
         return this.quizService.startQuiz(quizId, courseId,this.userService.getUser(principal));
     }
-    @PreAuthorize("hasAuthority('STUDENT')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','ADMIN')")
     @GetMapping("/{quizId}/grade")
     public ResponseEntity<?> getGrade(@PathVariable long courseId, @PathVariable long quizId, Principal principal){
         User currentUser = this.userService.getUser(principal);
@@ -48,12 +48,12 @@ public class QuizController {
         if(this.quizService.getQuiz(quizId, courseId).isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found");
 
-        Optional<QuizSubmission> submission = this.quizSubmissionService.getSubmission(currentUser.getId(),quizId);
+        Optional<QuizSubmission> submission = this.quizSubmissionService.getSubmission(currentUser.getId(),quizId,this.userService.getUser(principal),courseId);
         return submission.map(quizSubmission -> (quizSubmission.getSubmissionState() == SubmissionState.SUBMITTED) ? new ResponseEntity<>("Quiz: " + quizSubmission.getQuiz().getQuizId() + "\nTotal Marks: " + quizSubmission.getMarks() + "/" + quizSubmission.getQuiz().getNumberOfQuestions(), HttpStatus.OK) : new ResponseEntity<>("Quiz doesnt exist or has not been attempted yet", HttpStatus.NOT_FOUND)).orElseGet(() -> new ResponseEntity<>("Quiz not found", HttpStatus.NOT_FOUND));
     }
-    @PreAuthorize("hasAuthority('INSTRUCTOR')")
+    @PreAuthorize("hasAnyAuthority('INSTRUCTOR','ADMIN')")
     @PostMapping
-    public ResponseEntity<?> createQuiz(@PathVariable long courseId, @RequestBody QuizDTO newQuiz){
+    public ResponseEntity<?> createQuiz(@PathVariable long courseId, @RequestBody QuizDTO newQuiz,Principal principal){
         QuestionBank questionBank = this.questionBankService.getQuestionBank(newQuiz.getQuestionBankId(),courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No question bank found"));
 
@@ -66,7 +66,6 @@ public class QuizController {
                 .startDate(newQuiz.getStartDate())
                 .numberOfQuestions(newQuiz.getNumberOfQuestions())
                 .build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.quizService.addQuiz(quiz,courseId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.quizService.addQuiz(quiz,courseId,this.userService.getUser(principal)));
     }
-
 }
