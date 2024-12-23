@@ -16,7 +16,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Collection;
 
 @Data
 @Entity
@@ -44,8 +44,11 @@ public class QuizSubmission {
     @NotNull
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "quizSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<QuizAnswer> studentAnswers;
+    @Enumerated(EnumType.STRING)
+    private SubmissionState submissionState;
+
+    @OneToMany(mappedBy = "quizSubmission", cascade = CascadeType.ALL)
+    private Collection<QuizAnswer> studentAnswers;
 
     private int marks;
 }

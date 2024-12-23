@@ -1,8 +1,8 @@
 package com.lms.quiz.quizsubmission;
 
 
+
 import com.lms.questionbank.question.mcq.MCQ;
-import com.lms.questionbank.question.Question;
 import com.lms.questionbank.question.shortanswerquestion.ShortAnswerQuestion;
 import com.lms.quiz.Quiz;
 import com.lms.quiz.quizanswer.mcqanswer.MCQAnswer;
@@ -10,17 +10,15 @@ import com.lms.quiz.quizanswer.QuizAnswer;
 import com.lms.quiz.quizanswer.QuizAnswerDTO;
 import com.lms.quiz.quizanswer.QuizAnswerService;
 import com.lms.quiz.quizanswer.shortanswer.ShortAnswer;
-import com.lms.quiz.QuizService;
 import com.lms.notification.Notification;
 import com.lms.notification.NotificationService;
 import com.lms.user.User;
-import jakarta.persistence.DiscriminatorValue;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +27,6 @@ import java.util.Optional;
 @AllArgsConstructor
 public class QuizSubmissionService {
     private final QuizSubmissionRepository quizSubmissionRepository;
-    private final QuizService quizService;
     private final QuizAnswerService quizAnswerService;
     private final NotificationService notificationService;
     public QuizSubmission getQuizSubmission(long submissionId,long quizId){
@@ -39,51 +36,41 @@ public class QuizSubmissionService {
     public List<QuizSubmission> getAllQuizSubmissions(long quizId){
         return this.quizSubmissionRepository.findAllByQuizQuizId(quizId);
     }
-    public Optional<QuizSubmission> checkIfAttemptedBefore(long studentId, long quizId){
+    public Optional<QuizSubmission> getSubmission(long studentId, long quizId){
         return this.quizSubmissionRepository.findByQuizQuizIdAndStudentId(quizId,studentId);
     }
-    public QuizSubmission submitQuiz(long quizId, long courseId, User student, List<QuizAnswerDTO> studAns) {
-        Quiz quiz = this.quizService.getQuiz(quizId,courseId)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Quiz not found"));
-        QuizSubmission quizSubmission =  QuizSubmission.builder()
-                .quiz(quiz)
-                .student(student)
-                .createdAt(LocalDateTime.now())
-                .build();
-        List<QuizAnswer> studentAnswers = studAns.stream()
-                .map(submittedAnswer -> {
-                        QuizAnswer quizAnswer;
-                        if(quiz.getQuestions().get(submittedAnswer.getQuestionNumber() - 1).getClass().getAnnotation(DiscriminatorValue.class).value().equals("mcq"))
-                            quizAnswer = MCQAnswer.builder()
-                                    .chosenOption(submittedAnswer.getChosenOption())
-                                    .build();
-                        else
-                            quizAnswer = ShortAnswer.builder()
-                                    .shortAnswer(submittedAnswer.getAnswer())
-                                    .build();
-                        quizAnswer.setQuestion(quiz.getQuestions().get(submittedAnswer.getQuestionNumber() - 1));
-                        return quizAnswer;
-                }).toList();
-        quizSubmission.setStudentAnswers(studentAnswers);
-        for(QuizAnswer studentAns: studentAnswers){
-            studentAns.setQuizSubmission(quizSubmission);
-        }
-        gradeQuiz(quizSubmission,studentAnswers,quiz.getQuestions());
+    public void updateQuizSubmission(QuizSubmission quizSubmission){
         this.quizSubmissionRepository.save(quizSubmission);
-        for(QuizAnswer studentAns: studentAnswers){
-            this.quizAnswerService.addSubmittedAnswer(studentAns);
-        }
+    }
+    public QuizSubmission submitQuiz(long quizId, User student, List<QuizAnswerDTO> studAns) {
+        QuizSubmission quizSubmission = this.quizSubmissionRepository.findByQuizQuizIdAndStudentId(quizId,student.getId()).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+        HashSet<QuizAnswer> actualAnswers = new HashSet<>(quizAnswerService.getStudentAnswers(quizSubmission.getQuizSubmissionId()));
+        studAns.forEach(answerDTO -> {
+               Optional<QuizAnswer> answer =  actualAnswers.stream().filter(actualAnswer -> actualAnswer.getQuestion().getQuestionId() == answerDTO.getQuestionNumber()).findFirst();
+               if (answer.isPresent()) {
+                   if(answer.get() instanceof ShortAnswer)
+                       ((ShortAnswer)answer.get()).setShortAnswer(answerDTO.getAnswer());
+                   else
+                       ((MCQAnswer)answer.get()).setChosenOption(answerDTO.getChosenOption());
+                   this.quizAnswerService.addOrUpdateSubmittedAnswer(answer.get());
+               }
+               
+        });
+        quizSubmission.setStudentAnswers(actualAnswers);
+        gradeQuiz(quizSubmission,actualAnswers);
+        quizSubmission.setSubmissionState(SubmissionState.SUBMITTED);
+        this.quizSubmissionRepository.save(quizSubmission);
         sendGradingNotification(quizSubmission);
         return quizSubmission;
     }
-    private void gradeQuiz(QuizSubmission studentSubmission, List<QuizAnswer> studentAnswers, List<Question> quizQuestions) {
+    private void gradeQuiz(QuizSubmission studentSubmission, Collection<QuizAnswer> studentAnswers) {
         int score = 0;
 
         for(QuizAnswer answer : studentAnswers) {
             if (answer instanceof MCQAnswer)
-                score += ((MCQ) quizQuestions.stream().filter(question -> question.getQuestionId() == answer.getQuestion().getQuestionId()).findFirst().get()).getCorrectOption() == ((MCQAnswer) answer).getChosenOption() ? 1 : 0;
+                score += ((MCQ)answer.getQuestion()).getCorrectOption() == ((MCQAnswer) answer).getChosenOption() ? 1 : 0;
             else
-                score += ((ShortAnswerQuestion) quizQuestions.stream().filter(question -> question.getQuestionId() == answer.getQuestion().getQuestionId()).findFirst().get()).getAnswer().equals(((ShortAnswer) answer).getShortAnswer()) ? 1 : 0;
+                score += ((ShortAnswerQuestion)answer.getQuestion()).getAnswer().equals(((ShortAnswer) answer).getShortAnswer()) ? 1 : 0;
         }
         studentSubmission.setMarks(score);
     }

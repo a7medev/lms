@@ -11,9 +11,9 @@ public class QuizAnswerService {
     private QuizAnswerRepository quizAnswerRepository;
 
     public Collection<QuizAnswer> getStudentAnswers(long quizSubmissionId) {
-        return this.quizAnswerRepository.findAllByQuizSubmission_QuizSubmissionId(quizSubmissionId);
+        return this.quizAnswerRepository.findAllByQuizSubmissionQuizSubmissionId(quizSubmissionId);
     }
-    public void addSubmittedAnswer(QuizAnswer quizAnswer) {
+    public void addOrUpdateSubmittedAnswer(QuizAnswer quizAnswer) {
         this.quizAnswerRepository.save(quizAnswer);
     }
 }

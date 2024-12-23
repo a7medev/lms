@@ -3,7 +3,6 @@ package com.lms.quiz.quizanswer.mcqanswer;
 import com.lms.quiz.quizanswer.QuizAnswer;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -14,6 +13,6 @@ import lombok.*;
 @DiscriminatorValue(value = "mcq_answer")
 @Builder
 public class MCQAnswer extends QuizAnswer {
-    @NotNull
+    //@NotNull  Since the answer will be determined later
     private int chosenOption;
 }

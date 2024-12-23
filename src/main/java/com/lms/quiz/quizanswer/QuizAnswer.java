@@ -7,6 +7,8 @@ import com.lms.quiz.quizsubmission.QuizSubmission;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Objects;
+
 
 @Entity
 @Data
@@ -21,6 +23,17 @@ public abstract class QuizAnswer {
     @ManyToOne
     @JoinColumn(name = "questionId",nullable = false)
     private Question question;
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof QuizAnswer that)) return false;
+        return getQuizAnswerId() == that.getQuizAnswerId();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getQuizAnswerId());
+    }
 
     @ManyToOne
     @JsonIgnore

@@ -8,5 +8,5 @@ import java.util.Collection;
 
 @Repository
 public interface QuizAnswerRepository extends JpaRepository<QuizAnswer, Long> {
-    Collection<QuizAnswer>  findAllByQuizSubmission_QuizSubmissionId(long quizSubmissionId);
+    Collection<QuizAnswer>  findAllByQuizSubmissionQuizSubmissionId(long quizSubmissionId);
 }

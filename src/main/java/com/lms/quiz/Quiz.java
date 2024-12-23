@@ -2,7 +2,6 @@ package com.lms.quiz;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.lms.questionbank.question.Question;
 import com.lms.questionbank.QuestionBank;
 import com.lms.quiz.quizsubmission.QuizSubmission;
 import com.lms.course.Course;
@@ -16,7 +15,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "quiz")
@@ -39,20 +38,31 @@ public class Quiz {
 
 
     /*while this sort of defies the ERD diagram we agreed upon,
-      I wasnt able to come up with any solution to store the randomly queried questions for a given quiz
+      I wasn't able to come up with any solution to store the randomly queried questions for a given quiz
       which I will need in order to grade student's submission, because I have no instance of the questions that was queried from the database
       I was left no choice but to query it again which will then result in different questions compared to the ones shown
       another solution is for the same quiz each student will have different model i.e. each student trying to attempt the quiz will trigger
       a query to the database resulting in new questions tho, that ensures there will be no cheating (lol), this will be costly in terms of performance due to multiple
-      database hits, and we didnt really talk about that during the documentation in regard to different model per student.
+      database hits, and we didn't really talk about that during the documentation in regard to different model per student.
      */
-    @JsonIgnore
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Quiz quiz)) return false;
+        return getQuizId() == quiz.getQuizId();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getQuizId());
+    }
+    /*@JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "quiz_question",
             joinColumns = @JoinColumn(name = "quizId"),
             inverseJoinColumns = @JoinColumn(name = "questionId"))
-    private List<Question> questions;
+    private List<Question> questions;*/
 
     @JsonIgnore
     @ManyToOne

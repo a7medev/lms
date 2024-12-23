@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class QuizQuestionDTO {
-    int questionNumber;
+    Long questionNumber;
     private String questionTitle;
 }
