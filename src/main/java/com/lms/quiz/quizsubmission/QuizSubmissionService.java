@@ -2,6 +2,8 @@ package com.lms.quiz.quizsubmission;
 
 
 
+import com.lms.course.CourseService;
+import com.lms.enrollment.EnrollmentRepository;
 import com.lms.questionbank.question.mcq.MCQ;
 import com.lms.questionbank.question.shortanswerquestion.ShortAnswerQuestion;
 import com.lms.quiz.Quiz;
@@ -13,6 +15,7 @@ import com.lms.quiz.quizanswer.shortanswer.ShortAnswer;
 import com.lms.notification.Notification;
 import com.lms.notification.NotificationService;
 import com.lms.user.User;
+import com.lms.util.AuthUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,20 +32,30 @@ public class QuizSubmissionService {
     private final QuizSubmissionRepository quizSubmissionRepository;
     private final QuizAnswerService quizAnswerService;
     private final NotificationService notificationService;
-    public QuizSubmission getQuizSubmission(long submissionId,long quizId){
+    private final EnrollmentRepository enrollmentRepository;
+    private final CourseService courseService;
+    public QuizSubmission getQuizSubmission(long submissionId,long quizId,User student,long courseId){
+        if(!(AuthUtils.hasCourseAccess(this.courseService.getCourseById(courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found")),student,enrollmentRepository)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Access denied");
         return this.quizSubmissionRepository.findByQuizSubmissionIdAndQuizQuizId(submissionId,quizId)
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
-    public List<QuizSubmission> getAllQuizSubmissions(long quizId){
+    public List<QuizSubmission> getAllQuizSubmissions(long quizId,User instructor,long courseId){
+        if(!(AuthUtils.hasCourseAccess(this.courseService.getCourseById(courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found")),instructor,enrollmentRepository)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Access denied");
         return this.quizSubmissionRepository.findAllByQuizQuizId(quizId);
     }
-    public Optional<QuizSubmission> getSubmission(long studentId, long quizId){
+    public Optional<QuizSubmission> getSubmission(long studentId, long quizId,User student,long courseId){
+        if(!(AuthUtils.hasCourseAccess(this.courseService.getCourseById(courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found")),student,enrollmentRepository)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Access denied");
         return this.quizSubmissionRepository.findByQuizQuizIdAndStudentId(quizId,studentId);
     }
     public void updateQuizSubmission(QuizSubmission quizSubmission){
         this.quizSubmissionRepository.save(quizSubmission);
     }
-    public QuizSubmission submitQuiz(long quizId, User student, List<QuizAnswerDTO> studAns) {
+    public QuizSubmission submitQuiz(long quizId, User student, List<QuizAnswerDTO> studAns,long courseId) {
+        if(!(AuthUtils.hasCourseAccess(this.courseService.getCourseById(courseId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found")),student,enrollmentRepository)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Access denied");
         QuizSubmission quizSubmission = this.quizSubmissionRepository.findByQuizQuizIdAndStudentId(quizId,student.getId()).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
         HashSet<QuizAnswer> actualAnswers = new HashSet<>(quizAnswerService.getStudentAnswers(quizSubmission.getQuizSubmissionId()));
         studAns.forEach(answerDTO -> {
