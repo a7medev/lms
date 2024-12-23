@@ -20,5 +20,4 @@ public class AuthUtils {
             case ADMIN -> true;
         };
     }
-
 }
