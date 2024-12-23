@@ -25,7 +25,7 @@ public class UserService {
 
         if (request.getActive() != null) {
             boolean isActive = request.getActive();
-            user.setActive(isActive);
+            user.setIsActive(isActive);
         }
 
         try {
