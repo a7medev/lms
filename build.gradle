@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.projectlombok:lombok:1.18.36'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
