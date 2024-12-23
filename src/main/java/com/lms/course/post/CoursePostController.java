@@ -53,7 +53,7 @@ public class CoursePostController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN','INSTRUCTOR')")
     @DeleteMapping("/{postId}")
-    public void deletePost(@PathVariable Long postId) {
-        coursePostService.deletePost(postId);
+    public void deletePost(@PathVariable Long courseId, @PathVariable Long postId, Principal principal) {
+        coursePostService.deletePost(courseId, postId, principal);
     }
 }

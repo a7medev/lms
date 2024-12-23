@@ -42,20 +42,35 @@ public class CoursePostService {
 
     public CoursePost createPost(CoursePost coursePost, Long courseId, Principal principal) {
         User user = principalToUser(principal);
+        if (!(user.getRole() == Role.ADMIN || user.getRole() == Role.INSTRUCTOR)) {
+            throw new IllegalStateException("UnAuthorized Role");
+        }
         if (user.getRole() == Role.INSTRUCTOR) {
             boolean isInstructorForCourse = courseRepository.existsByCourseIdAndInstructor(courseId, user);
             if (!isInstructorForCourse) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the instructor for this course");
             }
         }
+
         Course course = new Course();
         course.setCourseId(courseId);
         coursePost.setCourse(course);
         return coursePostRepository.save(coursePost);
-
     }
 
-    public void deletePost(Long postId) {
+    public void deletePost(Long courseId, Long postId, Principal principal) {
+        User user = principalToUser(principal);
+
+        if (!(user.getRole() == Role.ADMIN || user.getRole() == Role.INSTRUCTOR)) {
+            throw new IllegalStateException("UnAuthorized Role");
+        }
+        if (user.getRole() == Role.INSTRUCTOR) {
+            boolean isInstructorForCourse = courseRepository.existsByCourseIdAndInstructor(courseId, user);
+            if (!isInstructorForCourse) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the instructor for this course");
+            }
+        }
+
         coursePostRepository.deleteById(postId);
     }
 
