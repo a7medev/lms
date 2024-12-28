@@ -113,7 +113,7 @@ public class CourseMaterialService {
     public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file, Principal principal) throws IOException {
         User user = principalToUser(principal);
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Course not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Course not found"));
 
         if (!hasCourseAccess(course,user,enrollmentRepository)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
