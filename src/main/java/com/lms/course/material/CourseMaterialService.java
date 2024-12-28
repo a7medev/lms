@@ -2,12 +2,14 @@ package com.lms.course.material;
 
 import com.lms.assignment.submission.AssignmentSubmission;
 import com.lms.course.Course;
+import com.lms.course.CourseRepository;
 import com.lms.course.post.CoursePost;
 import com.lms.course.post.CoursePostRepository;
 import com.lms.course.post.CoursePostService;
 import com.lms.enrollment.Enrollment;
 import com.lms.enrollment.EnrollmentRepository;
 import com.lms.notification.Notification;
+import com.lms.notification.NotificationRepository;
 import com.lms.notification.NotificationService;
 import com.lms.user.Role;
 import com.lms.user.User;
@@ -32,6 +34,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.lms.util.AuthUtils.hasCourseAccess;
 import static com.lms.util.AuthUtils.principalToUser;
 
 @RequiredArgsConstructor
@@ -41,6 +44,7 @@ public class CourseMaterialService {
     private final CourseMaterialRepository courseMaterialRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final NotificationService notificationService;
+    private final CourseRepository courseRepository;
 
     public List<CourseMaterial> getMaterialsForUser(Long courseId, Long postId, Principal principal) {
         User user = principalToUser(principal);
@@ -108,12 +112,11 @@ public class CourseMaterialService {
 
     public CourseMaterial uploadMaterial(long courseId, long postId, MultipartFile file, Principal principal) throws IOException {
         User user = principalToUser(principal);
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Course not found"));
 
-        if (user.getRole() == Role.INSTRUCTOR) {
-            boolean isInstructorForCourse = courseMaterialRepository.existsByPost_Course_CourseIdAndPost_Course_Instructor(courseId, user);
-            if (!isInstructorForCourse) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the instructor for this course");
-            }
+        if (!hasCourseAccess(course,user,enrollmentRepository)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
 
         if (file.isEmpty()) {
@@ -128,9 +131,6 @@ public class CourseMaterialService {
                 Files.copy(inputStream, materialPath, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // prepare entity
-            Course course = new Course();
-            course.setCourseId(courseId);
 
             CoursePost post = new CoursePost();
             post.setCourseUpdateId(postId);
@@ -156,11 +156,12 @@ public class CourseMaterialService {
 
         CourseMaterial material = courseMaterialRepository.findById(materialId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"));
+        Course course = material.getPost().getCourse();;
 
-        Optional<Course> enrolledCourse = enrollmentRepository.findCourseByUserAndCourseId(user, courseId);
-        if (enrolledCourse.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not enrolled in this course");
+        if (!hasCourseAccess(course,user,enrollmentRepository)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
+
 
         Path filePath = Paths.get(material.getFileLocation());
         if (!Files.exists(filePath)) {

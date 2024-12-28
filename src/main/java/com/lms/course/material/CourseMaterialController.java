@@ -64,7 +64,7 @@ public class CourseMaterialController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'INSTRUCTOR')")
     @DeleteMapping("/{materialId}")
-    public void deletePost(@PathVariable Long courseId, @PathVariable Long postId, @PathVariable Long materialId,Principal principal) {
+    public void deleteMaterial(@PathVariable Long courseId, @PathVariable Long postId, @PathVariable Long materialId,Principal principal) {
         courseMaterialService.deleteMaterial(courseId,postId,materialId,principal);
     }
 }
